@@ -23,7 +23,17 @@ import { Sheet } from '../components/Sheet'
 import { useStore } from '../state/store'
 import { greeting, nextInvitation } from '../state/util'
 import { emailThemeRequest, makeId } from '../state/themeRequest'
-import { ThemeRequest } from '../state/types'
+import {
+  AGE_BENEFIT,
+  AGE_LABEL,
+  AgeGroup,
+  GOAL_LABEL,
+  TherapyGoal,
+  ThemeRequest,
+} from '../state/types'
+
+const AGES: AgeGroup[] = ['child', 'teen', 'youngAdult', 'adult']
+const GOALS: TherapyGoal[] = ['sleep', 'focus', 'stress', 'mood']
 
 const ROW_ORDER: SessionGroup[] = ['sleep', 'chanting', 'bodyScan', 'breathwork']
 
@@ -38,9 +48,10 @@ export function Home({
   onLocked: (s: Session) => void
   onAutoStart: () => void
 }) {
-  const { persisted, openSettings, addRequest, removeRequest } = useStore()
+  const { persisted, openSettings, addRequest, removeRequest, patchSettings } = useStore()
   const name = persisted.settings.name
   const [requestOpen, setRequestOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
   const [aboutFocus, setAboutFocus] = useState<AboutFocus>('about')
   const [makersOpen, setMakersOpen] = useState(false)
@@ -94,9 +105,20 @@ export function Home({
             {greeting()}
             {name ? `, ${name}` : ''}
           </div>
-          <h1 className="serif" style={{ fontSize: 32, margin: '0 0 20px', lineHeight: 1.12, maxWidth: 520 }}>
+          <h1 className="serif" style={{ fontSize: 32, margin: '0 0 14px', lineHeight: 1.12, maxWidth: 520 }}>
             {invitation}
           </h1>
+
+          {/* active therapy profile — tap to re-tune or try another profile */}
+          <button onClick={() => setProfileOpen(true)} aria-label="Change therapy profile" style={profileChip}>
+            <span style={{ color: 'var(--accent)' }}>◉</span>
+            <span>
+              Tuned for {AGE_LABEL[persisted.settings.ageGroup]} · {GOAL_LABEL[persisted.settings.goal]}
+            </span>
+            <span style={{ color: 'var(--text-secondary)' }}>· change</span>
+          </button>
+
+          <div style={{ height: 14 }} />
 
           {/* fast-track entry */}
           <Pill onClick={onAutoStart} variant="ghost" style={{ minHeight: 46 }}>
@@ -183,6 +205,34 @@ export function Home({
         </div>
       </PullToRefresh>
 
+      {/* therapy profile switcher — re-tune, or step into another profile */}
+      <Sheet open={profileOpen} onClose={() => setProfileOpen(false)} title="Therapy profile">
+        <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.6, margin: '0 0 16px' }}>
+          Sound therapy benefits each age differently. Switch profiles anytime — for yourself, or
+          to set up a session for someone else, like a teenager winding down before study.
+        </p>
+        <div className="label" style={{ marginBottom: 10 }}>Who is listening</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+          {AGES.map((a) => (
+            <button key={a} onClick={() => patchSettings({ ageGroup: a })} style={profileCard(persisted.settings.ageGroup === a)}>
+              <span style={{ fontSize: 15 }}>{AGE_LABEL[a]}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>{AGE_BENEFIT[a]}</span>
+            </button>
+          ))}
+        </div>
+        <div className="label" style={{ marginBottom: 10 }}>Goal</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+          {GOALS.map((g) => (
+            <button key={g} onClick={() => patchSettings({ goal: g })} style={goalChip(persisted.settings.goal === g)}>
+              {GOAL_LABEL[g]}
+            </button>
+          ))}
+        </div>
+        <Pill full onClick={() => setProfileOpen(false)}>
+          Done
+        </Pill>
+      </Sheet>
+
       <RequestThemeSheet open={requestOpen} onClose={() => setRequestOpen(false)} onSubmit={submitRequest} />
       <AboutSheet open={aboutOpen} onClose={() => setAboutOpen(false)} focus={aboutFocus} />
       <MakersPage open={makersOpen} onClose={() => setMakersOpen(false)} />
@@ -211,6 +261,40 @@ export function Home({
   )
 }
 
+const profileChip: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
+  minHeight: 38,
+  padding: '0 16px',
+  borderRadius: 100,
+  border: '1px solid var(--hairline)',
+  background: 'var(--chip)',
+  color: 'var(--text-primary)',
+  fontSize: 13,
+}
+const profileCard = (on: boolean): React.CSSProperties => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+  gap: 3,
+  textAlign: 'left',
+  padding: '12px 16px',
+  borderRadius: 16,
+  border: `1px solid ${on ? 'var(--accent)' : 'var(--hairline)'}`,
+  background: on ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
+  color: 'var(--text-primary)',
+  width: '100%',
+})
+const goalChip = (on: boolean): React.CSSProperties => ({
+  minHeight: 40,
+  padding: '0 16px',
+  borderRadius: 100,
+  border: `1px solid ${on ? 'var(--accent)' : 'var(--hairline)'}`,
+  background: on ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
+  color: 'var(--text-primary)',
+  fontSize: 13,
+})
 const footerLink: React.CSSProperties = {
   fontSize: 12,
   color: 'var(--text-secondary)',

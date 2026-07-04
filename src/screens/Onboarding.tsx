@@ -1,9 +1,10 @@
 /**
- * Onboarding — Attune's tuning ritual. Five light steps, no account required:
+ * Onboarding — Attune's tuning ritual. Five gentle steps, no account required:
  *   1. What sound therapy is   2. Name   3. Age group (benefits differ by age)
  *   4. Goal   5. Make it yours (look + session timer) → start a matched session.
- * Every choice is saved to settings, so the app is customized from the very
- * first screen — and everything remains editable later in Settings.
+ * Therapeutic pacing: nothing auto-advances — every step has Back / Next so the
+ * listener moves at their own rhythm and can revisit a choice. Every choice is
+ * saved to settings and remains editable later (Settings, or the Home profile).
  */
 
 import { useMemo, useState } from 'react'
@@ -25,6 +26,7 @@ import { haptic, timerLabel } from '../state/util'
 
 const AGES: AgeGroup[] = ['child', 'teen', 'youngAdult', 'adult']
 const GOALS: TherapyGoal[] = ['sleep', 'focus', 'stress', 'mood']
+const STEPS = 5
 
 const GOAL_HINT: Record<TherapyGoal, string> = {
   sleep: 'Slow soundscapes that ease you into deep rest.',
@@ -41,21 +43,21 @@ export function Onboarding({ onDone }: { onDone: (goal: TherapyGoal) => void }) 
   const [age, setAge] = useState<AgeGroup | null>(null)
   const [goal, setGoal] = useState<TherapyGoal | null>(null)
 
-  const next = () => {
+  // each step gates Next until it has what it needs (name is optional)
+  const canNext = step === 2 ? age != null : step === 3 ? goal != null : true
+
+  const back = () => {
     haptic.light()
+    setStep((s) => Math.max(0, s - 1))
+  }
+
+  const next = () => {
+    if (!canNext) return
+    haptic.light()
+    if (step === 1) patchSettings({ name: name.trim() })
+    if (step === 2 && age) patchSettings({ ageGroup: age })
+    if (step === 3 && goal) patchSettings({ goal })
     setStep((s) => s + 1)
-  }
-
-  const pickAge = (a: AgeGroup) => {
-    setAge(a)
-    patchSettings({ ageGroup: a })
-    next()
-  }
-
-  const pickGoal = (g: TherapyGoal) => {
-    setGoal(g)
-    patchSettings({ goal: g })
-    next()
   }
 
   const finish = () => {
@@ -68,133 +70,152 @@ export function Onboarding({ onDone }: { onDone: (goal: TherapyGoal) => void }) 
     <div className="screen">
       <GradientCanvas controller={controller} psychedelic={0.7} pastel={persisted.settings.theme === 'pastel'} />
       <div style={overlay}>
-        {step === 0 && (
-          <div style={panel}>
-            <div className="label">ATTUNE · SOUND THERAPY</div>
-            <h1 className="serif" style={{ fontSize: 40, margin: 0, lineHeight: 1.1 }}>
-              Sound that helps you feel better.
-            </h1>
-            <p style={lead}>
-              Scientific and practical evidence suggests sound therapy can improve mental,
-              emotional, and even physical well-being. Rhythmic sound slows the breath, calms
-              the nervous system, and helps the mind settle — at every age.
-            </p>
-            <Pill onClick={next}>Tune in</Pill>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div style={panel}>
-            <h1 className="serif" style={{ fontSize: 40, margin: 0 }}>
-              What's your name?
-            </h1>
-            <input
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="(optional)"
-              style={inputStyle}
-            />
-            <Pill
-              onClick={() => {
-                patchSettings({ name: name.trim() })
-                next()
-              }}
-            >
-              Continue
-            </Pill>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div style={panel}>
-            <h1 className="serif" style={{ fontSize: 36, margin: 0 }}>
-              Who is listening?
-            </h1>
-            <p style={lead}>Sound therapy benefits each age differently — we tune the experience to you.</p>
-            <div style={chipCol}>
-              {AGES.map((a) => (
-                <button key={a} onClick={() => pickAge(a)} style={chipWide}>
-                  <span style={{ fontSize: 16 }}>{AGE_LABEL[a]}</span>
-                  <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                    {AGE_BENEFIT[a]}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div style={panel}>
-            <h1 className="serif" style={{ fontSize: 36, margin: 0 }}>
-              What do you need most{name.trim() ? `, ${name.trim()}` : ''}?
-            </h1>
-            {age && (
-              <p style={{ ...lead, margin: 0 }}>
-                For you: {AGE_BENEFIT[age].charAt(0).toLowerCase() + AGE_BENEFIT[age].slice(1)}
+        <div style={panel}>
+          {step === 0 && (
+            <>
+              <div className="label">ATTUNE · SOUND THERAPY</div>
+              <h1 className="serif" style={{ fontSize: 40, margin: 0, lineHeight: 1.1 }}>
+                Sound that helps you feel better.
+              </h1>
+              <p style={lead}>
+                Scientific and practical evidence suggests sound therapy can improve mental,
+                emotional, and even physical well-being. Rhythmic sound slows the breath, calms
+                the nervous system, and helps the mind settle — at every age.
               </p>
-            )}
-            <div style={chipCol}>
-              {GOALS.map((g) => (
-                <button key={g} onClick={() => pickGoal(g)} style={chipWide}>
-                  <span style={{ fontSize: 16 }}>{GOAL_LABEL[g]}</span>
-                  <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                    {GOAL_HINT[g]}
-                  </span>
-                </button>
+              <p style={{ ...lead, color: 'var(--text-primary)' }}>
+                Before we begin, unclench your jaw. Let your shoulders drop. There is no rush here.
+              </p>
+            </>
+          )}
+
+          {step === 1 && (
+            <>
+              <h1 className="serif" style={{ fontSize: 40, margin: 0 }}>
+                What may we call you?
+              </h1>
+              <p style={lead}>Only so your sessions can greet you. You're welcome to stay anonymous.</p>
+              <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="(optional)"
+                style={inputStyle}
+              />
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <h1 className="serif" style={{ fontSize: 36, margin: 0 }}>
+                Who is listening?
+              </h1>
+              <p style={lead}>
+                Sound meets each age differently. Choose whose calm we're tuning today — you can
+                switch profiles anytime, or simply explore another one.
+              </p>
+              <div style={chipCol}>
+                {AGES.map((a) => (
+                  <button key={a} onClick={() => setAge(a)} style={selCard(age === a)}>
+                    <span style={{ fontSize: 16 }}>{AGE_LABEL[a]}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                      {AGE_BENEFIT[a]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <h1 className="serif" style={{ fontSize: 36, margin: 0 }}>
+                What does your mind need most{name.trim() ? `, ${name.trim()}` : ''}?
+              </h1>
+              {age && (
+                <p style={{ ...lead, margin: 0 }}>
+                  For you: {AGE_BENEFIT[age].charAt(0).toLowerCase() + AGE_BENEFIT[age].slice(1)}
+                </p>
+              )}
+              <div style={chipCol}>
+                {GOALS.map((g) => (
+                  <button key={g} onClick={() => setGoal(g)} style={selCard(goal === g)}>
+                    <span style={{ fontSize: 16 }}>{GOAL_LABEL[g]}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                      {GOAL_HINT[g]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {step === 4 && (
+            <>
+              <h1 className="serif" style={{ fontSize: 36, margin: 0 }}>
+                Make it yours.
+              </h1>
+              <p style={lead}>Set the feel and how long sound stays with you. Everything can change later.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
+                <div className="label">Look</div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {(['dark', 'pastel'] as const).map((t) => (
+                    <button key={t} onClick={() => patchSettings({ theme: t })} style={chipSel(persisted.settings.theme === t)}>
+                      {t === 'dark' ? 'Night' : 'Pastel'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="label" style={{ marginTop: 6 }}>Session fades out after</div>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {TIMER_OPTIONS.map((t: SleepTimer) => (
+                    <button
+                      key={String(t)}
+                      onClick={() => patchSettings({ defaultSleepTimer: t })}
+                      style={chipSel(persisted.settings.defaultSleepTimer === t)}
+                    >
+                      {timerLabel(t)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* step dots + back / next — present on every step */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18, width: '100%', marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 7 }}>
+              {Array.from({ length: STEPS }, (_, i) => (
+                <span
+                  key={i}
+                  style={{
+                    width: i === step ? 22 : 7,
+                    height: 7,
+                    borderRadius: 4,
+                    background: i === step ? 'var(--accent)' : 'var(--text-ghost)',
+                    transition: 'all 260ms ease',
+                  }}
+                />
               ))}
             </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div style={panel}>
-            <h1 className="serif" style={{ fontSize: 36, margin: 0 }}>
-              Make it yours.
-            </h1>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
-              <div className="label">Look</div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                {(['dark', 'pastel'] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => patchSettings({ theme: t })}
-                    style={{
-                      ...chip,
-                      borderColor: persisted.settings.theme === t ? 'var(--accent)' : 'var(--hairline)',
-                      background: persisted.settings.theme === t ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
-                    }}
-                  >
-                    {t === 'dark' ? 'Night' : 'Pastel'}
-                  </button>
-                ))}
-              </div>
-
-              <div className="label" style={{ marginTop: 6 }}>Session fades out after</div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {TIMER_OPTIONS.map((t: SleepTimer) => (
-                  <button
-                    key={String(t)}
-                    onClick={() => patchSettings({ defaultSleepTimer: t })}
-                    style={{
-                      ...chip,
-                      borderColor:
-                        persisted.settings.defaultSleepTimer === t ? 'var(--accent)' : 'var(--hairline)',
-                      background:
-                        persisted.settings.defaultSleepTimer === t ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
-                    }}
-                  >
-                    {timerLabel(t)}
-                  </button>
-                ))}
-              </div>
+            <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+              {step > 0 && (
+                <Pill variant="ghost" onClick={back} style={{ minWidth: 110 }}>
+                  ← Back
+                </Pill>
+              )}
+              {step < STEPS - 1 ? (
+                <Pill onClick={next} style={{ flex: 1, opacity: canNext ? 1 : 0.45 }}>
+                  {step === 0 ? 'Begin gently' : 'Next →'}
+                </Pill>
+              ) : (
+                <Pill onClick={finish} style={{ flex: 1 }}>
+                  Begin my first session
+                </Pill>
+              )}
             </div>
-
-            <Pill onClick={finish}>Begin my first session</Pill>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
@@ -229,7 +250,7 @@ const chipCol: React.CSSProperties = {
   gap: 10,
   width: '100%',
 }
-const chipWide: React.CSSProperties = {
+const selCard = (on: boolean): React.CSSProperties => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'flex-start',
@@ -237,20 +258,20 @@ const chipWide: React.CSSProperties = {
   textAlign: 'left',
   padding: '14px 18px',
   borderRadius: 18,
-  border: '1px solid var(--hairline)',
-  background: 'var(--chip)',
+  border: `1px solid ${on ? 'var(--accent)' : 'var(--hairline)'}`,
+  background: on ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
   color: 'var(--text-primary)',
   width: '100%',
-}
-const chip: React.CSSProperties = {
+})
+const chipSel = (on: boolean): React.CSSProperties => ({
   minHeight: 44,
   padding: '0 18px',
   borderRadius: radius.pill,
-  border: '1px solid var(--hairline)',
-  background: 'var(--chip)',
+  border: `1px solid ${on ? 'var(--accent)' : 'var(--hairline)'}`,
+  background: on ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
   color: 'var(--text-primary)',
   fontSize: 14,
-}
+})
 const inputStyle: React.CSSProperties = {
   width: '100%',
   background: 'transparent',
