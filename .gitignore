@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+*.log
+
+# source audio (served copy lives in public/audio)
+sounds_/
+
+# Capacitor native project (generated in CI)
+android/
+ios/
+*.apk

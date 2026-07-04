@@ -1,0 +1,111 @@
+/* Global styles — Drift spec §4. Always dark, never light (§3). */
+
+:root {
+  --surface: #080810;
+  --surface-raised: #0f0f1e;
+  --text-primary: #f0eef8;
+  --text-secondary: #8e8baa;
+  --text-ghost: #3d3b52;
+  --accent: #a78bfa;
+  --accent-dim: #6d4fc7;
+  --danger: #f87171;
+
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* frosted panel + hairline + chip fill (theme-aware) */
+  --panel: rgba(15, 15, 30, 0.72);
+  --hairline: rgba(255, 255, 255, 0.12);
+  --chip: rgba(255, 255, 255, 0.06);
+}
+
+/* Pastel (light) theme — soft, calm, easy on the eyes */
+:root[data-theme='pastel'] {
+  --surface: #efeaf7;
+  --surface-raised: #fbf9ff;
+  --text-primary: #2b2540;
+  --text-secondary: #6e688c;
+  --text-ghost: #b6b0cc;
+  --accent: #7c5ce6;
+  --accent-dim: #a594e8;
+  --danger: #d94a52;
+  --panel: rgba(251, 249, 255, 0.86);
+  --hairline: rgba(43, 37, 64, 0.22);
+  --chip: rgba(43, 37, 64, 0.07);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* allow the browser's native pull-to-refresh at the top of the page */
+  overscroll-behavior-y: auto;
+  user-select: none;
+}
+
+button {
+  font-family: var(--sans);
+  color: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+input {
+  font-family: var(--sans);
+  color: var(--text-primary);
+}
+
+/* Scrollbars stay invisible — the gradient is the face (§4.1). */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* App shell: phone-like frame, centered. Landscape-first (§3). */
+.app-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+/* Screen layer — positioning only. Cross-fade between screens is handled by the
+   App's fade wrapper (§12 buttery transitions). */
+.screen {
+  position: absolute;
+  inset: 0;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.serif {
+  font-family: var(--serif);
+  font-weight: 400;
+}
+
+.no-select {
+  user-select: none;
+}
