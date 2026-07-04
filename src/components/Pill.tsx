@@ -26,7 +26,7 @@ export function Pill({ children, onClick, variant = 'accent', full, style }: Pro
         borderRadius: radius.pill,
         background: accent ? 'var(--accent)' : 'var(--chip)',
         border: accent ? 'none' : '1px solid var(--hairline)',
-        color: accent ? '#120A26' : 'var(--text-primary)',
+        color: accent ? 'var(--on-accent)' : 'var(--text-primary)',
         fontSize: 16,
         fontWeight: 500,
         letterSpacing: 0.2,

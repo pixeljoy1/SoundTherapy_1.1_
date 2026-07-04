@@ -27,7 +27,7 @@ export function RequestCard({ req, onLongPress }: { req: ThemeRequest; onLongPre
         height: 116,
         borderRadius: radius.card,
         overflow: 'hidden',
-        background: 'linear-gradient(160deg, rgba(167,139,250,0.10), rgba(15,15,30,0.5))',
+        background: 'linear-gradient(160deg, var(--accent-soft), rgba(15,15,30,0.5))',
         border: '1px solid rgba(255,255,255,0.06)',
         padding: 14,
         display: 'flex',

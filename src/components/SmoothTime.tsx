@@ -61,7 +61,7 @@ export function SmoothTime({
         transition: 'opacity 1s linear',
         // a very slight calming glow
         textShadow: glow
-          ? '0 0 28px rgba(167,139,250,0.38), 0 0 10px rgba(240,238,248,0.18)'
+          ? '0 0 28px var(--accent-glow), 0 0 10px rgba(240,238,248,0.18)'
           : undefined,
       }}
       aria-label={`${text}`}

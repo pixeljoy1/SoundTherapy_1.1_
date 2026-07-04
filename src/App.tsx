@@ -25,6 +25,7 @@ import { byId, CATALOG } from './session/catalog'
 import { audioEngine } from './audio/AudioEngine'
 import { effectivePalette, isLocked, prefersReducedMotion } from './state/util'
 import { SleepTimer, TherapyGoal } from './state/types'
+import { applyProfileTheme } from './theme/profileTheme'
 
 /** Onboarding goal → the session that best delivers it (all free tier). */
 const GOAL_SESSION: Record<TherapyGoal, string> = {
@@ -47,6 +48,11 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = persisted.settings.theme
   }, [persisted.settings.theme])
+
+  // profile-reactive art direction: age + goal re-tint the whole interface
+  useEffect(() => {
+    applyProfileTheme(persisted.settings.ageGroup, persisted.settings.goal)
+  }, [persisted.settings.ageGroup, persisted.settings.goal])
 
   const [lockedSession, setLockedSession] = useState<Session | null>(null)
   const [banner, setBanner] = useState<string | null>(null)

@@ -23,6 +23,8 @@ import {
 } from '../state/types'
 import { radius } from '../theme/tokens'
 import { haptic, timerLabel } from '../state/util'
+import { MiniGradient } from '../components/MiniGradient'
+import { AGE_PALETTE, GOAL_PALETTE } from '../theme/profileTheme'
 
 const AGES: AgeGroup[] = ['child', 'teen', 'youngAdult', 'adult']
 const GOALS: TherapyGoal[] = ['sleep', 'focus', 'stress', 'mood']
@@ -71,10 +73,19 @@ export function Onboarding({ onDone }: { onDone: (goal: TherapyGoal) => void }) 
       <GradientCanvas controller={controller} psychedelic={0.7} pastel={persisted.settings.theme === 'pastel'} />
       <div style={overlay}>
         <div style={panel}>
+          {/* each step rises in freshly (keyed remount restarts the animation) */}
+          <div key={step} className="reveal" style={stepWrap}>
           {step === 0 && (
             <>
+              {/* breathing halo — an invitation to slow down before a single word */}
+              <div style={haloWrap} aria-hidden>
+                <span className="halo-ring" />
+                <span className="halo-ring" style={{ animationDelay: '1.85s' }} />
+                <span className="halo-ring" style={{ animationDelay: '3.7s' }} />
+                <span style={haloCore} />
+              </div>
               <div className="label">ATTUNE · SOUND THERAPY</div>
-              <h1 className="serif" style={{ fontSize: 40, margin: 0, lineHeight: 1.1 }}>
+              <h1 className="serif ink" style={{ fontSize: 40, margin: 0, lineHeight: 1.1 }}>
                 Sound that helps you feel better.
               </h1>
               <p style={lead}>
@@ -115,10 +126,23 @@ export function Onboarding({ onDone }: { onDone: (goal: TherapyGoal) => void }) 
               </p>
               <div style={chipCol}>
                 {AGES.map((a) => (
-                  <button key={a} onClick={() => setAge(a)} style={selCard(age === a)}>
-                    <span style={{ fontSize: 16 }}>{AGE_LABEL[a]}</span>
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                      {AGE_BENEFIT[a]}
+                  <button
+                    key={a}
+                    onClick={() => {
+                      setAge(a)
+                      // the whole sky re-tunes to this age's palette — choice made visible
+                      controller.setPalette(AGE_PALETTE[a])
+                    }}
+                    style={selCard(age === a)}
+                  >
+                    <span style={swatch}>
+                      <MiniGradient palette={AGE_PALETTE[a]} pastel={persisted.settings.theme === 'pastel'} />
+                    </span>
+                    <span style={cardText}>
+                      <span style={{ fontSize: 16 }}>{AGE_LABEL[a]}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                        {AGE_BENEFIT[a]}
+                      </span>
                     </span>
                   </button>
                 ))}
@@ -138,10 +162,22 @@ export function Onboarding({ onDone }: { onDone: (goal: TherapyGoal) => void }) 
               )}
               <div style={chipCol}>
                 {GOALS.map((g) => (
-                  <button key={g} onClick={() => setGoal(g)} style={selCard(goal === g)}>
-                    <span style={{ fontSize: 16 }}>{GOAL_LABEL[g]}</span>
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                      {GOAL_HINT[g]}
+                  <button
+                    key={g}
+                    onClick={() => {
+                      setGoal(g)
+                      controller.setPalette(GOAL_PALETTE[g])
+                    }}
+                    style={selCard(goal === g)}
+                  >
+                    <span style={swatch}>
+                      <MiniGradient palette={GOAL_PALETTE[g]} pastel={persisted.settings.theme === 'pastel'} />
+                    </span>
+                    <span style={cardText}>
+                      <span style={{ fontSize: 16 }}>{GOAL_LABEL[g]}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                        {GOAL_HINT[g]}
+                      </span>
                     </span>
                   </button>
                 ))}
@@ -181,6 +217,8 @@ export function Onboarding({ onDone }: { onDone: (goal: TherapyGoal) => void }) 
               </div>
             </>
           )}
+
+          </div>
 
           {/* step dots + back / next — present on every step */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18, width: '100%', marginTop: 4 }}>
@@ -252,26 +290,65 @@ const chipCol: React.CSSProperties = {
 }
 const selCard = (on: boolean): React.CSSProperties => ({
   display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-start',
-  gap: 4,
+  alignItems: 'center',
+  gap: 14,
   textAlign: 'left',
-  padding: '14px 18px',
+  padding: '13px 16px',
   borderRadius: 18,
   border: `1px solid ${on ? 'var(--accent)' : 'var(--hairline)'}`,
-  background: on ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
+  background: on ? 'var(--accent-soft)' : 'var(--chip)',
+  boxShadow: on ? '0 6px 26px -10px var(--accent-glow)' : 'none',
   color: 'var(--text-primary)',
   width: '100%',
+  transition: 'border-color 240ms ease, background 240ms ease, box-shadow 240ms ease',
 })
 const chipSel = (on: boolean): React.CSSProperties => ({
   minHeight: 44,
   padding: '0 18px',
   borderRadius: radius.pill,
   border: `1px solid ${on ? 'var(--accent)' : 'var(--hairline)'}`,
-  background: on ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
+  background: on ? 'var(--accent-soft)' : 'var(--chip)',
   color: 'var(--text-primary)',
   fontSize: 14,
+  transition: 'border-color 240ms ease, background 240ms ease',
 })
+const stepWrap: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 24,
+  alignItems: 'flex-start',
+  width: '100%',
+}
+const swatch: React.CSSProperties = {
+  position: 'relative',
+  width: 44,
+  height: 44,
+  borderRadius: 14,
+  overflow: 'hidden',
+  flex: '0 0 auto',
+  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
+}
+const cardText: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+}
+const haloWrap: React.CSSProperties = {
+  position: 'relative',
+  width: 84,
+  height: 84,
+  marginBottom: 2,
+}
+const haloCore: React.CSSProperties = {
+  position: 'absolute',
+  inset: '50%',
+  width: 12,
+  height: 12,
+  transform: 'translate(-50%, -50%)',
+  borderRadius: '50%',
+  background: 'var(--accent)',
+  boxShadow: '0 0 22px 4px var(--accent-glow)',
+}
 const inputStyle: React.CSSProperties = {
   width: '100%',
   background: 'transparent',

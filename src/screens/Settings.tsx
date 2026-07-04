@@ -168,8 +168,8 @@ const goPremium: React.CSSProperties = {
   width: '100%',
   padding: '14px 16px',
   borderRadius: 16,
-  background: 'rgba(167,139,250,0.14)',
-  border: '1px solid rgba(167,139,250,0.4)',
+  background: 'var(--accent-soft)',
+  border: '1px solid var(--accent-line)',
   color: 'var(--text-primary)',
 }
 

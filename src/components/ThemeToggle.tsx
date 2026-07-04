@@ -22,7 +22,7 @@ export function ThemeToggle() {
         borderRadius: 100,
         background: 'rgba(127,92,230,0.16)',
         backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(167,139,250,0.45)',
+        border: '1px solid var(--accent-line)',
         color: 'var(--accent)',
         display: 'grid',
         placeItems: 'center',

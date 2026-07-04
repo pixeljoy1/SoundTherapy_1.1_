@@ -15,7 +15,7 @@ export function AddThemeCard({ onClick }: { onClick: () => void }) {
         height: 116,
         borderRadius: radius.card,
         background: 'rgba(255,255,255,0.02)',
-        border: '1.5px dashed rgba(167,139,250,0.4)',
+        border: '1.5px dashed var(--accent-line)',
         color: 'var(--text-secondary)',
         display: 'flex',
         flexDirection: 'column',
@@ -24,7 +24,7 @@ export function AddThemeCard({ onClick }: { onClick: () => void }) {
         gap: 8,
         transition: 'background 200ms ease, border-color 200ms ease',
       }}
-      onPointerDown={(e) => (e.currentTarget.style.background = 'rgba(167,139,250,0.08)')}
+      onPointerDown={(e) => (e.currentTarget.style.background = 'var(--accent-soft)')}
       onPointerUp={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
       onPointerLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
     >

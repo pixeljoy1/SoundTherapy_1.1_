@@ -89,7 +89,7 @@ export function PullToRefresh({ children, style }: { children: React.ReactNode; 
             width: 30,
             height: 30,
             borderRadius: '50%',
-            border: '2px solid rgba(167,139,250,0.25)',
+            border: '2px solid var(--accent-line)',
             borderTopColor: 'var(--accent)',
             transform: `rotate(${pull * 4}deg)`,
             animation: refreshing ? 'ptr-spin 0.7s linear infinite' : undefined,

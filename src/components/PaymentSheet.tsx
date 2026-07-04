@@ -83,7 +83,7 @@ export function PaymentSheet() {
                   minHeight: 40,
                   borderRadius: 12,
                   border: `1px solid ${method === m ? 'var(--accent)' : 'var(--hairline)'}`,
-                  background: method === m ? 'rgba(167,139,250,0.14)' : 'transparent',
+                  background: method === m ? 'var(--accent-soft)' : 'transparent',
                   color: 'var(--text-primary)',
                   fontSize: 14,
                 }}
@@ -133,7 +133,7 @@ const summary: React.CSSProperties = {
   justifyContent: 'space-between',
   padding: '14px 16px',
   borderRadius: 16,
-  background: 'rgba(167,139,250,0.10)',
+  background: 'var(--accent-soft)',
   border: '1px solid var(--hairline)',
 }
 const input: React.CSSProperties = {

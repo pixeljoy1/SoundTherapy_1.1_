@@ -174,7 +174,7 @@ const primary: React.CSSProperties = {
   display: 'grid',
   placeItems: 'center',
   transition: 'transform 120ms cubic-bezier(0.22,1,0.36,1), filter 200ms ease',
-  boxShadow: '0 0 0 6px rgba(167,139,250,0.10)',
+  boxShadow: '0 0 0 6px var(--accent-soft)',
 }
 const slider: React.CSSProperties = {
   flex: 1,

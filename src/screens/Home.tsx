@@ -31,6 +31,8 @@ import {
   TherapyGoal,
   ThemeRequest,
 } from '../state/types'
+import { ResonanceField } from '../components/ResonanceField'
+import { profileHues } from '../theme/profileTheme'
 
 const AGES: AgeGroup[] = ['child', 'teen', 'youngAdult', 'adult']
 const GOALS: TherapyGoal[] = ['sleep', 'focus', 'stress', 'mood']
@@ -100,44 +102,64 @@ export function Home({
 
       {/* scrollable content with pull-to-refresh */}
       <PullToRefresh style={scroll}>
-        <div style={{ maxWidth: 760, margin: '0 auto', width: '100%' }}>
-          <div className="label" style={{ marginBottom: 6 }}>
-            {greeting()}
-            {name ? `, ${name}` : ''}
+        <div style={{ maxWidth: 760, margin: '0 auto', width: '100%', position: 'relative' }}>
+          {/* living resonance field behind the hero, painted in the profile's hues */}
+          <ResonanceField
+            hues={profileHues(persisted.settings.ageGroup, persisted.settings.goal)}
+            height={300}
+          />
+
+          <div style={{ position: 'relative', paddingTop: 26 }}>
+            <div className="label reveal d1" style={{ marginBottom: 10 }}>
+              {greeting()}
+              {name ? `, ${name}` : ''}
+            </div>
+            <h1
+              className="serif ink reveal d2"
+              style={{ fontSize: 'clamp(34px, 6vw, 46px)', margin: '0 0 18px', lineHeight: 1.08, maxWidth: 520 }}
+            >
+              {invitation}
+            </h1>
+
+            {/* active therapy profile — tap to re-tune or try another profile */}
+            <button
+              className="reveal d3"
+              onClick={() => setProfileOpen(true)}
+              aria-label="Change therapy profile"
+              style={profileChip}
+            >
+              <span className="pulse-dot" />
+              <span>
+                Tuned for {AGE_LABEL[persisted.settings.ageGroup]} · {GOAL_LABEL[persisted.settings.goal]}
+              </span>
+              <span style={{ color: 'var(--text-secondary)' }}>· change</span>
+            </button>
+
+            <div style={{ height: 14 }} />
+
+            {/* fast-track entry */}
+            <div className="reveal d4" style={{ display: 'inline-flex' }}>
+              <Pill onClick={onAutoStart} variant="ghost" style={{ minHeight: 46 }}>
+                ✦&nbsp;&nbsp;Decide for me
+              </Pill>
+            </div>
           </div>
-          <h1 className="serif" style={{ fontSize: 32, margin: '0 0 14px', lineHeight: 1.12, maxWidth: 520 }}>
-            {invitation}
-          </h1>
-
-          {/* active therapy profile — tap to re-tune or try another profile */}
-          <button onClick={() => setProfileOpen(true)} aria-label="Change therapy profile" style={profileChip}>
-            <span style={{ color: 'var(--accent)' }}>◉</span>
-            <span>
-              Tuned for {AGE_LABEL[persisted.settings.ageGroup]} · {GOAL_LABEL[persisted.settings.goal]}
-            </span>
-            <span style={{ color: 'var(--text-secondary)' }}>· change</span>
-          </button>
-
-          <div style={{ height: 14 }} />
-
-          {/* fast-track entry */}
-          <Pill onClick={onAutoStart} variant="ghost" style={{ minHeight: 46 }}>
-            ✦&nbsp;&nbsp;Decide for me
-          </Pill>
 
           {/* breathing space after the greeting */}
-          <div style={{ height: 40 }} />
+          <div style={{ height: 44 }} />
 
           {/* featured — continue last played */}
-          <div className="label" style={{ marginBottom: 10 }}>
-            Continue
+          <div className="reveal d5">
+            <div className="label sect" style={{ marginBottom: 12 }}>
+              Continue
+            </div>
+            <SessionCard session={featured} onSelect={onSelect} onPreview={onPreview} onLocked={onLocked} featured fluid />
           </div>
-          <SessionCard session={featured} onSelect={onSelect} onPreview={onPreview} onLocked={onLocked} featured fluid />
 
           {/* mood groups as wrapping grids */}
-          {rows.map((row) => (
-            <div key={row.group} style={{ marginTop: 26 }}>
-              <div className="label" style={{ marginBottom: 10 }}>
+          {rows.map((row, ri) => (
+            <div key={row.group} className="reveal" style={{ marginTop: 30, animationDelay: `${460 + ri * 90}ms` }}>
+              <div className="label sect" style={{ marginBottom: 12 }}>
                 {GROUP_LABEL[row.group]}
               </div>
               <div style={grid}>
@@ -156,8 +178,8 @@ export function Home({
           ))}
 
           {/* request a new theme — logged here + emailed to the developer */}
-          <div style={{ marginTop: 26 }}>
-            <div className="label" style={{ marginBottom: 10 }}>
+          <div style={{ marginTop: 30 }}>
+            <div className="label sect" style={{ marginBottom: 12 }}>
               Your Themes
             </div>
             <div style={grid}>
@@ -264,12 +286,13 @@ export function Home({
 const profileChip: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: 8,
-  minHeight: 38,
-  padding: '0 16px',
+  gap: 10,
+  minHeight: 40,
+  padding: '0 18px',
   borderRadius: 100,
-  border: '1px solid var(--hairline)',
-  background: 'var(--chip)',
+  border: '1px solid var(--accent-line)',
+  background: 'var(--panel)',
+  backdropFilter: 'blur(12px)',
   color: 'var(--text-primary)',
   fontSize: 13,
 }
@@ -282,7 +305,7 @@ const profileCard = (on: boolean): React.CSSProperties => ({
   padding: '12px 16px',
   borderRadius: 16,
   border: `1px solid ${on ? 'var(--accent)' : 'var(--hairline)'}`,
-  background: on ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
+  background: on ? 'var(--accent-soft)' : 'var(--chip)',
   color: 'var(--text-primary)',
   width: '100%',
 })
@@ -291,7 +314,7 @@ const goalChip = (on: boolean): React.CSSProperties => ({
   padding: '0 16px',
   borderRadius: 100,
   border: `1px solid ${on ? 'var(--accent)' : 'var(--hairline)'}`,
-  background: on ? 'rgba(167,139,250,0.16)' : 'var(--chip)',
+  background: on ? 'var(--accent-soft)' : 'var(--chip)',
   color: 'var(--text-primary)',
   fontSize: 13,
 })
