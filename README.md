@@ -1,45 +1,48 @@
-# Attune — SoundTherapy 1.1
+# Parikrama — India, in circles around you
 
-> *Sound therapy for focus, calm, and deep rest. Tuned for every age.*
+> *Wherever you stand in India, we plot what's absolutely worth it within
+> 5, 10, 20, and 30 km — matched to how you like to travel.*
 
-An evolution of the Drift meditation prototype into a **sound therapy app**: the same
-gradient + layered-audio engine, recontextualized around the wellness impact of sound —
-with an onboarding that customizes the experience by **age group** (children · teenagers ·
-young adults) and **goal** (sleep · focus · stress · mood). Web-first and **Android-ready**
-(see [ANDROID_PORTING.md](./ANDROID_PORTING.md)); original spec in [SPEC.md](./SPEC.md).
+An exploratory pivot of the SoundTherapy 1.1 codebase: the entire UI is new,
+and only the **interaction nuances** were kept — the bottom sheets with
+swipe-to-dismiss, the scroll-driven reveals, the haptic pill buttons, the
+mono micro-copy and status lines, the paper-grain texture, the unhurried
+one-question-per-screen onboarding. Everything they now carry is a **tourism
+explorer for India**.
 
-The spec targets native Android (Kotlin / Jetpack Compose / AGSL). This prototype
-implements the *full UX, the signature gradient engine, and a layered audio system*
-on the web so the experience can be felt today — with code structured to port 1:1.
-
-**Live:** _published via GitHub Pages — see the repo's Pages URL._
-
----
-
-## What's implemented
-
-| Spec area | Status |
-|---|---|
-| §4 Visual design language (tokens, type scale, spacing, shape) | ✅ `src/theme/` |
-| §5 Gradient animation system — real-time multi-point noise shader | ✅ WebGL `src/gradient/` |
-| §5.3 Sleep dimming curve (drift + brightness over time) | ✅ `DimmingScheduler.ts` |
-| §5.4 Palette crossfade (4s GPU lerp) | ✅ `GradientController.ts` |
-| §6 Audio system — 3 layers (foundation / breath / ambient), synth mock | ✅ `src/audio/` |
-| §6.2 Exponential fade-to-silence + sleep timer | ✅ `SleepFader.ts` / `useSession.ts` |
-| §6.3 20-session catalog (+ 4 Focus "coming soon") | ✅ `src/session/catalog.ts` |
-| §7 Interaction model (tap-to-summon, long-press preview, haptics) | ✅ |
-| §8 Screens — Home, Pre-Play, Active Session, Breathwork, portrait adapt | ✅ `src/screens/` |
-| §8.5 Breathwork ring (Box / 4-7-8 / Coherent / Exhale-extended) | ✅ `BreathRing.tsx` / `BreathController.ts` |
-| §9 Settings (3 sections, bottom sheet) | ✅ `Settings.tsx` |
-| §10 Onboarding — 5 steps, customization-first (age group, goal, look, timer) | ✅ `Onboarding.tsx` |
-| §11 States & edge cases (pause, battery banner, status notes) | ◐ partial |
-| §12 Animation tokens & reduced-motion | ✅ |
-| §14 Monetization — free tier (3 sessions, 30-min cap) + paywall sheet | ✅ `Paywall.tsx` |
-
-**Mock audio:** sessions are rendered live from oscillators (no licensed stems — spec §18 Q2).
-Swap `Session.sound` for stream URLs when real audio lands.
+The name: a *parikrama* is the sacred circumambulation of a shrine — the
+app's 5/10/20/30 km circles around the traveler are exactly that.
 
 ---
+
+## What it does
+
+1. **Traveler profile** — onboarding builds a profile from the lenses Indian
+   tourism research actually segments by (Ministry of Tourism niche
+   categories + classic inbound/domestic personas): heritage, spiritual,
+   nature & wildlife, food & bazaars, art & craft, adventure, photography,
+   slow travel — plus a pace (unhurried / balanced / full throttle).
+2. **Location, anywhere in India** — the Geolocation API detects you (native
+   permission dialog under Capacitor on Android); a 29-hub manual picker
+   covers denied permission, no GPS, or armchair planning. A fix outside
+   India is detected and routed to the picker.
+3. **The radar** — the signature surface: an ego-centric polar map with the
+   four parikrama rings, every worthwhile place plotted at its true bearing and
+   distance (square-root radial scale so the walkable inner rings breathe),
+   a slow sweep, and tap-to-open dots.
+4. **The shortlist** — a curated atlas of **190 places across 29 hubs**
+   (UNESCO sites, ASI monuments, living rituals, food streets, craft
+   quarters, golden-hour vantage points), each scored `wow × profile
+   affinity` and ranked inside the chosen ring, with distance + compass
+   direction like a signpost.
+5. **Place sheets** — the story, a "like a local" insider tip, practicals
+   (time it deserves, entry, best hour), save-to-plan, mark-as-been, and a
+   Google Maps deep link for actual navigation.
+6. **The horizon** — when the rings run quiet (or even when they don't),
+   the nearest other hubs beyond 30 km, one tap to re-center on any of them.
+
+Privacy: the atlas ships with the app; the location fix never leaves the
+device.
 
 ## Run locally
 
@@ -48,41 +51,25 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # type-check + production bundle → dist/
 npm run preview    # serve the built bundle on :4190
+npm run icon       # regenerate icon + splash assets from SVG
 ```
 
-> Tip: open browser dev-tools and toggle **device toolbar → landscape** for the
-> intended bed-held experience. Audio starts after the first tap (browser policy).
-
----
+> Tip: in dev-tools device mode, use the sensors panel to spoof a location
+> (try 26.9124, 75.7873 — Jaipur) or just pick a hub from the location sheet.
 
 ## Architecture (web → Android map)
 
 ```
 src/
-├── theme/        Color/Type/Spacing tokens + 3 palettes   → Theme.kt / Color.kt
-├── gradient/     WebGL shader engine                       → AGSL RenderEffect
-│   ├── shader.ts            multi-point noise field        → ShaderProgram.agsl
-│   ├── GradientController.ts params + palette crossfade
-│   ├── DimmingScheduler.ts  §5.3 luminosity curve
-│   └── GradientCanvas.tsx   rAF render loop
-├── audio/        Web Audio synth (3 layers)                → ExoPlayer + LayerMixer
-│   ├── AudioEngine.ts
-│   └── SleepFader.ts        exponential fade
-├── session/      Catalog + breath pattern engine           → SessionRepository / BreathController
-├── state/        Store (localStorage) + useSession runtime → DataStore + SessionEngine
-├── components/   Cards, pills, sheet, overlay, breath ring
-└── screens/      Onboarding · Home · PrePlay · Session · Settings · Paywall
+├── theme/        Ivory + midnight tokens                → Theme.kt / Color.kt
+├── geo/          Haversine, bearings, useLocation hook  → FusedLocationProvider
+├── data/         Interest lenses · 29 hubs · 190-place curated atlas
+├── explorer/     Scoring engine (wow × affinity, rings, pace)
+├── components/   Radar, place cards/sheets, ring dial, house Sheet/Pill/Reveal
+├── screens/      Onboarding · Explore
+└── state/        Store (localStorage ≙ DataStore) + helpers
 ```
 
-Full mapping in [ANDROID_PORTING.md](./ANDROID_PORTING.md).
-
----
-
-## Prototype notes
-
-- **Premium** can be toggled in Settings → Account to unlock the full catalog /
-  unlimited timer without a billing flow.
-- **Reduced motion** (OS setting) pauses the shader to a slow static field and
-  removes screen-transition motion, per §12.3.
-- **AGSL fallback** (§18 Q3) is mirrored here: if WebGL2 is unavailable the canvas
-  paints a static CSS gradient.
+CI: `deploy.yml` publishes to GitHub Pages on `main`; `android.yml`
+(manual / `android-v*` tag) wraps `dist/` with Capacitor, injects location
+permissions into the manifest, and releases a sideloadable APK.

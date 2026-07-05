@@ -29,22 +29,24 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Build web app (audio streamed from the web → slim APK)
+      - name: Build web app
         run: npm run build
         env:
           VITE_BUILD: ${{ github.run_number }}
-          VITE_AUDIO_BASE: https://pixeljoy1.github.io/SoundTherapy_1.1_/
-
-      - name: Drop bundled audio (streamed instead)
-        run: rm -rf dist/audio
 
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Grant location permissions in the manifest
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          grep -q ACCESS_FINE_LOCATION "$MANIFEST" || \
+            sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />#' "$MANIFEST"
+
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Apply Attune resonance icon & splash
+      - name: Apply Parikrama icon & splash
         run: npx @capacitor/assets generate --android --assetPath assets
 
       - name: Build debug APK
@@ -54,19 +56,19 @@ jobs:
           ./gradlew assembleDebug --no-daemon
 
       - name: Stage APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk attune.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk parikrama.apk
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: attune-apk
-          path: attune.apk
+          name: parikrama-apk
+          path: parikrama.apk
 
       - name: Publish to a stable release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete android --yes --cleanup-tag || true
-          gh release create android attune.apk \
-            --title "Attune · Android (debug)" \
-            --notes "Sideload build of Attune. On your phone: enable 'Install unknown apps' for your browser, then open this APK. Rebuilt from the latest web app."
+          gh release create android parikrama.apk \
+            --title "Parikrama · Android (debug)" \
+            --notes "Sideload build of Parikrama. On your phone: enable 'Install unknown apps' for your browser, then open this APK. Rebuilt from the latest web app."

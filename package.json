@@ -1,9 +1,9 @@
 {
-  "name": "attune-soundtherapy",
+  "name": "parikrama-explorer",
   "private": true,
-  "version": "1.1.0",
+  "version": "0.1.0",
   "type": "module",
-  "description": "Attune — a sound therapy app for focus, calm, and deep rest. Web prototype (Android-ready).",
+  "description": "Parikrama — India, in circles around you. A location-aware tourism explorer: what's absolutely worth it within 5/10/20/30 km, matched to how you travel. Web prototype (Android-ready).",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

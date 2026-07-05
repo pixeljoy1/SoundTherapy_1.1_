@@ -1,7 +1,8 @@
 /**
- * Sheet — bottom sheet (§7.3 / §8.4). 28dp top corners (§4.4), frosted surface.
+ * Sheet — bottom sheet with 28px top corners and a frosted surface.
  * Springs up on open, slides down on close, and can be dismissed by swiping it
- * down (drag from the top of the sheet past a threshold).
+ * down (drag from the top of the sheet past a threshold). Carried over from
+ * the Attune interaction layer unchanged — it is the house gesture.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -93,7 +94,7 @@ export function Sheet({ open, onClose, children, title }: Props) {
       style={{
         position: 'absolute',
         inset: 0,
-        background: shown ? 'rgba(8,8,16,0.55)' : 'rgba(8,8,16,0)',
+        background: shown ? 'rgba(20,14,8,0.45)' : 'rgba(20,14,8,0)',
         backdropFilter: shown ? 'blur(2px)' : 'blur(0px)',
         display: 'flex',
         alignItems: 'flex-end',

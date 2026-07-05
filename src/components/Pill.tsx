@@ -1,4 +1,4 @@
-/** Primary pill button — Drift spec §8.2 ("Begin Session"). Full-width, accent. */
+/** Primary pill button — full-width accent, haptic press, scale-settle. */
 
 import { haptic } from '../state/util'
 import { radius } from '../theme/tokens'
