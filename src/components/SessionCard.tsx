@@ -7,6 +7,7 @@
 import { useRef } from 'react'
 import { Session, GROUP_LABEL } from '../session/types'
 import { MiniGradient } from './MiniGradient'
+import { ART } from '../therapy/therapies'
 import { effectivePalette, haptic, isLocked } from '../state/util'
 import { useStore } from '../state/store'
 import { radius } from '../theme/tokens'
@@ -67,6 +68,8 @@ export function SessionCard({ session, onSelect, onPreview, onLocked, featured, 
       }}
     >
       <MiniGradient palette={palette} pastel={pastel} />
+      {/* tile artwork — feathered edges, slow zoom on hover */}
+      {session.art && <img className="art-img" src={ART(session.art)} alt="" aria-hidden loading="lazy" />}
       {/* legibility scrim — light in pastel, dark otherwise */}
       <div
         style={{

@@ -13,7 +13,7 @@ export interface SessionSound {
   ambient: string
 }
 
-export type SessionGroup = 'sleep' | 'bodyScan' | 'breathwork' | 'chanting'
+export type SessionGroup = 'sleep' | 'bodyScan' | 'breathwork' | 'chanting' | 'study'
 
 /** A single breath phase. duration in seconds; 0 = skip phase. */
 export interface BreathPhase {
@@ -33,6 +33,8 @@ export interface Session {
   group: SessionGroup
   /** Which sound-therapy modality this session delivers (drives Home chapters). */
   therapy: TherapyId
+  /** Tile artwork filename (public/img); falls back to the gradient when absent. */
+  art?: string
   /** Minutes (the session's nominal length). */
   durationMin: number
   palette: PaletteId
@@ -57,4 +59,5 @@ export const GROUP_LABEL: Record<SessionGroup, string> = {
   bodyScan: 'Sound Bath',
   breathwork: 'Breath & Tone',
   chanting: 'Vocal Resonance',
+  study: 'Study & Focus',
 }

@@ -31,7 +31,7 @@ import { applyProfileTheme } from './theme/profileTheme'
 /** Onboarding goal → the session that best delivers it (all free tier). */
 const GOAL_SESSION: Record<TherapyGoal, string> = {
   sleep: 'drift',
-  focus: 'box-breath',
+  focus: 'asmr-forest',
   stress: 'forest-breathe',
   mood: 'sacred-om',
 }

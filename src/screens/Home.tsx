@@ -27,7 +27,8 @@ import { useStore } from '../state/store'
 import { greeting, nextInvitation } from '../state/util'
 import { emailThemeRequest, makeId } from '../state/themeRequest'
 import { profileHues, AGE_ACCENT } from '../theme/profileTheme'
-import { PRESCRIPTION, PRESCRIPTION_NOTE, THERAPIES, THERAPY_ORDER } from '../therapy/therapies'
+import { ART, PRESCRIPTION, PRESCRIPTION_NOTE, THERAPIES, THERAPY_ORDER, Therapy } from '../therapy/therapies'
+import { TherapyInfoSheet } from '../components/TherapyInfoSheet'
 import {
   AGE_BENEFIT,
   AGE_LABEL,
@@ -65,6 +66,7 @@ export function Home({
     setAboutOpen(true)
   }
   const [removeTarget, setRemoveTarget] = useState<ThemeRequest | null>(null)
+  const [evidence, setEvidence] = useState<Therapy | null>(null)
   const invitation = useState(() => nextInvitation())[0]
 
   const submitRequest = async (data: { name: string; mood: string; note: string }) => {
@@ -88,16 +90,21 @@ export function Home({
     return pool.slice(0, 4)
   }, [rx])
 
-  // chapters: every therapy modality with its sessions
-  const chapters = useMemo(
-    () =>
-      THERAPY_ORDER.map((t) => ({
+  // chapters: every therapy modality with its sessions, personalized order —
+  // the listener's prescribed therapies lead, the rest follow (numbers stay
+  // with their chapter, like a book read in the order that serves you)
+  const chapters = useMemo(() => {
+    const order = [...rx, ...THERAPY_ORDER.filter((t) => !rx.includes(t))]
+    return order
+      .map((t) => ({
         therapy: THERAPIES[t],
         items: CATALOG.filter((s) => s.therapy === t),
-      })).filter((c) => c.items.length > 0),
-    [],
-  )
+      }))
+      .filter((c) => c.items.length > 0)
+  }, [rx])
 
+  const student = age === 'child' || age === 'teen' || age === 'youngAdult'
+  const studySession = byId(age === 'child' ? 'study-rain' : 'asmr-forest')!
   const initial = (name.trim() || AGE_LABEL[age]).charAt(0).toUpperCase()
 
   return (
@@ -163,6 +170,69 @@ export function Home({
 
           <div style={{ height: 40 }} />
 
+          {/* ── study spotlight — the unmissable door for students ── */}
+          {student && (
+            <section
+              className="soft-panel reveal d5"
+              style={studyBanner}
+              onClick={() => onSelect(studySession)}
+              role="button"
+              aria-label="Start a study session"
+            >
+              <img
+                className="art-img"
+                src={ART(age === 'child' ? 'study-kid.svg' : 'study-teen.svg')}
+                alt=""
+                aria-hidden
+                style={{ opacity: 1 }}
+              />
+              <div style={studyScrim} />
+              <div style={{ position: 'relative', maxWidth: 480 }}>
+                <div className="label" style={{ color: '#EDE4FF', marginBottom: 8 }}>
+                  {THERAPIES.asmrStudy.no} · ASMR & STUDY BEDS
+                </div>
+                <div className="serif" style={{ fontSize: 'clamp(26px, 5vw, 40px)', lineHeight: 1.05, color: '#FFF', marginBottom: 8 }}>
+                  Study time{name.trim() ? `, ${name.trim()}` : ''}?
+                </div>
+                <p style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.82)', margin: '0 0 16px' }}>
+                  Whisper-soft sound that slows the heart and holds attention — tuned for homework,
+                  revision and deep work.
+                </p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <Pill
+                    onClick={() => onSelect(studySession)}
+                    style={{ minHeight: 46 }}
+                  >
+                    ▶&nbsp;&nbsp;Start studying with sound
+                  </Pill>
+                  <button
+                    className="evidence-btn"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setEvidence(THERAPIES.asmrStudy)
+                    }}
+                  >
+                    The science ↗
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ── adult: therapy, stated plainly ── */}
+          {!student && (
+            <div className="reveal d5" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', margin: '0 0 6px' }}>
+              <p className="serif-i" style={{ fontSize: 16, color: 'var(--text-secondary)', margin: 0 }}>
+                Sound therapy, grounded in clinical research — every chapter cites its studies.
+              </p>
+              <button className="evidence-btn" onClick={() => setEvidence(rxPrimary)}>
+                The evidence ↗
+              </button>
+            </div>
+          )}
+
+          <div style={{ height: student ? 34 : 24 }} />
+
           {/* ── marquee ── */}
           <div className="marquee reveal d5" aria-hidden>
             <div>
@@ -175,19 +245,31 @@ export function Home({
           </div>
 
           {/* ── the prescription — research mapped to this listener ── */}
-          <section style={{ ...chapterBox, marginTop: 44 }}>
+          <section className="soft-panel" style={{ ...chapterBox, marginTop: 44 }}>
             <TherapyMesh hues={rxPrimary.hues} opacity={0.2} />
             <div style={{ position: 'relative' }}>
-              <div className="label" style={{ color: 'var(--accent)', marginBottom: 10 }}>
-                Prescribed for {name.trim() || `the ${AGE_LABEL[age].toLowerCase()}`} · {GOAL_LABEL[goal]}
+              <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 300px', minWidth: 260 }}>
+                  <div className="label" style={{ color: 'var(--accent)', marginBottom: 10 }}>
+                    Prescribed for {name.trim() || `the ${AGE_LABEL[age].toLowerCase()}`} · {GOAL_LABEL[goal]}
+                  </div>
+                  <h2 className="serif" style={h2}>
+                    {rxPrimary.name} <span className="serif-i" style={{ color: 'var(--text-secondary)' }}>first.</span>
+                  </h2>
+                  <p style={sciNote}>{PRESCRIPTION_NOTE[age][goal]}</p>
+                  <p style={sciLine}>
+                    {rxPrimary.science} <span style={srcTag}>{rxPrimary.source}</span>
+                  </p>
+                  <div style={{ marginTop: 14 }}>
+                    <button className="evidence-btn" onClick={() => setEvidence(rxPrimary)}>
+                      The evidence ↗
+                    </button>
+                  </div>
+                </div>
+                <div className="chapter-art" style={{ flex: '0 1 200px', height: 130, minWidth: 150 }}>
+                  <img src={ART(rxPrimary.art)} alt="" aria-hidden />
+                </div>
               </div>
-              <h2 className="serif" style={h2}>
-                {rxPrimary.name} <span className="serif-i" style={{ color: 'var(--text-secondary)' }}>first.</span>
-              </h2>
-              <p style={sciNote}>{PRESCRIPTION_NOTE[age][goal]}</p>
-              <p style={sciLine}>
-                {rxPrimary.science} <span style={srcTag}>{rxPrimary.source}</span>
-              </p>
               <div style={{ ...grid, marginTop: 20 }}>
                 {rxSessions.map((s) => (
                   <SessionCard key={s.id} session={s} onSelect={onSelect} onPreview={onPreview} onLocked={onLocked} fluid />
@@ -209,25 +291,35 @@ export function Home({
             The six therapies
           </div>
           {chapters.map(({ therapy, items }) => (
-            <section key={therapy.id} style={chapterBox}>
+            <section key={therapy.id} className="soft-panel" style={chapterBox}>
               <TherapyMesh hues={therapy.hues} />
               <div style={{ position: 'relative' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18, flexWrap: 'wrap' }}>
-                  <span className="chapter-no">{therapy.no}</span>
-                  <div style={{ paddingBottom: 8 }}>
-                    <h2 className="serif" style={{ ...h2, margin: 0 }}>
-                      {therapy.name}
-                    </h2>
-                    <div className="serif-i" style={{ fontSize: 17, color: 'var(--text-secondary)', marginTop: 4 }}>
-                      {therapy.tagline}
+                <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 300px', minWidth: 260 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18, flexWrap: 'wrap' }}>
+                      <span className="chapter-no">{therapy.no}</span>
+                      <div style={{ paddingBottom: 8 }}>
+                        <h2 className="serif" style={{ ...h2, margin: 0 }}>
+                          {therapy.name}
+                        </h2>
+                        <div className="serif-i" style={{ fontSize: 17, color: 'var(--text-secondary)', marginTop: 4 }}>
+                          {therapy.tagline}
+                        </div>
+                      </div>
+                    </div>
+                    <p style={sciLine}>
+                      {therapy.science} <span style={srcTag}>{therapy.source}</span>
+                    </p>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', margin: '12px 0 20px' }}>
+                      <span style={bestForChip(therapy.hues[0])}>Best for · {therapy.bestFor}</span>
+                      <button className="evidence-btn" onClick={() => setEvidence(therapy)}>
+                        The evidence ↗
+                      </button>
                     </div>
                   </div>
-                </div>
-                <p style={sciLine}>
-                  {therapy.science} <span style={srcTag}>{therapy.source}</span>
-                </p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0 20px' }}>
-                  <span style={bestForChip(therapy.hues[0])}>Best for · {therapy.bestFor}</span>
+                  <div className="chapter-art" style={{ flex: '0 1 210px', height: 140, minWidth: 160, marginBottom: 20 }}>
+                    <img src={ART(therapy.art)} alt="" aria-hidden loading="lazy" />
+                  </div>
                 </div>
                 <div style={grid}>
                   {items.map((s) => (
@@ -326,6 +418,7 @@ export function Home({
         </Pill>
       </Sheet>
 
+      <TherapyInfoSheet therapy={evidence} onClose={() => setEvidence(null)} />
       <RequestThemeSheet open={requestOpen} onClose={() => setRequestOpen(false)} onSubmit={submitRequest} />
       <AboutSheet open={aboutOpen} onClose={() => setAboutOpen(false)} focus={aboutFocus} />
       <MakersPage open={makersOpen} onClose={() => setMakersOpen(false)} />
@@ -390,6 +483,22 @@ const grid: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
   gap: 12,
+}
+const studyBanner: React.CSSProperties = {
+  position: 'relative',
+  borderRadius: 28,
+  overflow: 'hidden',
+  padding: 'clamp(22px, 4vw, 36px)',
+  border: '1px solid var(--hairline)',
+  cursor: 'pointer',
+  minHeight: 220,
+  display: 'flex',
+  alignItems: 'center',
+}
+const studyScrim: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  background: 'linear-gradient(100deg, rgba(6,4,14,0.82) 20%, rgba(6,4,14,0.35) 62%, rgba(6,4,14,0.08) 100%)',
 }
 const chapterBox: React.CSSProperties = {
   position: 'relative',

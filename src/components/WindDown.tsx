@@ -12,6 +12,7 @@ const LINES: Record<SessionGroup, string[]> = {
   breathwork: ['Winding down…', 'Carry the calm with you', 'Well done'],
   chanting: ['Winding down…', 'Rest in the silence', 'Be at peace'],
   bodyScan: ['Winding down…', 'Let the body rest', 'Be well'],
+  study: ['Winding down…', 'Good work — take a stretch', 'See you next session'],
 }
 
 export function WindDown({ group, durationMs }: { group: SessionGroup; durationMs: number }) {
