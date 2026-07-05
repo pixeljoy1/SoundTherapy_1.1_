@@ -238,12 +238,79 @@ input {
   border-radius: 6px;
 }
 
+/* ── Editorial journal layer (Sansara-grade) ────────────────────────── */
+
+/* Marquee — a slow ribbon of intent between hero and chapters. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  padding: 12px 0;
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+.marquee > div {
+  display: inline-block;
+  animation: marquee 26s linear infinite;
+}
+.marquee span {
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 0 18px;
+}
+.marquee em {
+  font-family: var(--serif);
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  font-size: 15px;
+  color: var(--accent);
+}
+
+/* Therapy mesh — organic hue blobs breathing behind each chapter. */
+@keyframes blobDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(4%, -5%) scale(1.08); }
+  66% { transform: translate(-4%, 4%) scale(0.94); }
+}
+.mesh-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(46px);
+  animation: blobDrift 16s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Ghost chapter numerals — oversized, almost not there. */
+.chapter-no {
+  font-family: var(--serif);
+  font-size: clamp(64px, 11vw, 120px);
+  line-height: 0.9;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--hairline);
+  user-select: none;
+}
+
+.serif-i {
+  font-family: var(--serif);
+  font-style: italic;
+}
+
 /* Honor reduced motion everywhere the new layer animates. */
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .halo-ring,
   .pulse-dot::after,
-  .app-frame::after {
+  .app-frame::after,
+  .marquee > div,
+  .mesh-blob {
     animation: none;
   }
   .reveal {

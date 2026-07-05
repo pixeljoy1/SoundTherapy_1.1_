@@ -2,7 +2,7 @@
 
 import { PaletteId } from '../theme/palettes'
 
-export type Screen = 'onboarding' | 'home' | 'preplay' | 'session'
+export type Screen = 'gate' | 'onboarding' | 'home' | 'preplay' | 'session'
 
 /** Sleep timer in minutes, or 'infinite' = "Until I stop it" (§6.2).
  *  0.5 = a 30-second trial. */

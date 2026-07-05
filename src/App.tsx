@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GradientCanvas } from './gradient/GradientCanvas'
 import { GradientController } from './gradient/GradientController'
 import { Onboarding } from './screens/Onboarding'
+import { ProfileGate } from './screens/ProfileGate'
 import { Home } from './screens/Home'
 import { PrePlay } from './screens/PrePlay'
 import { ActiveSession } from './screens/ActiveSession'
@@ -173,6 +174,8 @@ export default function App() {
           transition: 'opacity 260ms cubic-bezier(0.4,0,0.2,1)',
         }}
       >
+        {display === 'gate' && <ProfileGate />}
+
         {display === 'onboarding' && <Onboarding onDone={onboardingDone} />}
 
         {display === 'home' && (

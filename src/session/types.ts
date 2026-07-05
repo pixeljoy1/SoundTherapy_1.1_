@@ -1,6 +1,7 @@
 /** Session domain types — Drift spec §6.3 / §8.5. */
 
 import { PaletteId } from '../theme/palettes'
+import { TherapyId } from '../therapy/therapies'
 
 /** Legacy synth descriptor — only `breathCycle` is used by the file-based engine
  *  (for the gradient breath-sync); the rest is retained metadata. */
@@ -30,6 +31,8 @@ export interface Session {
   id: string
   title: string
   group: SessionGroup
+  /** Which sound-therapy modality this session delivers (drives Home chapters). */
+  therapy: TherapyId
   /** Minutes (the session's nominal length). */
   durationMin: number
   palette: PaletteId

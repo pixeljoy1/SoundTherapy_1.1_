@@ -24,77 +24,77 @@ const BOX: BreathPattern = {
 export const CATALOG: Session[] = [
   // ── Sleep (8) ────────────────────────────────────────────────
   {
-    id: 'drift', title: 'Deep Drift', group: 'sleep', durationMin: 48, palette: 'dusk', free: true,
+    id: 'drift', title: 'Deep Drift', group: 'sleep', therapy: 'slowTempo', durationMin: 48, palette: 'dusk', free: true,
     track: A('sleep1_.mp3'),
     sound: { root: 110, breathCycle: 7, ambientDensity: 0.3, cutoff: 600, ambient: 'none' },
   },
   {
-    id: 'coastal-night', title: 'Coastal Night', group: 'sleep', durationMin: 32, palette: 'coastal', free: true,
+    id: 'coastal-night', title: 'Coastal Night', group: 'sleep', therapy: 'natureField', durationMin: 32, palette: 'coastal', free: true,
     track: A('ocean1.mp3'),
     sound: { root: 98, breathCycle: 6, ambientDensity: 0.9, cutoff: 700, ambient: 'waves' },
   },
   {
-    id: 'rainfall-system', title: 'Rainfall System', group: 'sleep', durationMin: 40, palette: 'rainfall', free: true,
+    id: 'rainfall-system', title: 'Rainfall System', group: 'sleep', therapy: 'noiseColor', durationMin: 40, palette: 'rainfall', free: true,
     track: A('rain1_.mp3'),
     sound: { root: 90, breathCycle: 5, ambientDensity: 0.95, cutoff: 1200, ambient: 'rain' },
   },
   {
-    id: 'northern-lights', title: 'Northern Lights', group: 'sleep', durationMin: 35, palette: 'aurora', free: true,
+    id: 'northern-lights', title: 'Northern Lights', group: 'sleep', therapy: 'resonantBowls', durationMin: 35, palette: 'aurora', free: true,
     track: A('flute_zen.mp3'),
     sound: { root: 130, breathCycle: 6.5, ambientDensity: 0.55, cutoff: 900, ambient: 'shimmer' },
   },
   {
-    id: 'forest-breathe', title: 'Forest Breathe', group: 'sleep', durationMin: 38, palette: 'forest', free: true,
+    id: 'forest-breathe', title: 'Forest Breathe', group: 'sleep', therapy: 'natureField', durationMin: 38, palette: 'forest', free: true,
     track: A('forest.mp3'),
     sound: { root: 100, breathCycle: 6, ambientDensity: 0.7, cutoff: 800, ambient: 'forest' },
   },
   {
-    id: 'deep-tide', title: 'Deep Tide', group: 'sleep', durationMin: 45, palette: 'tide', free: true,
+    id: 'deep-tide', title: 'Deep Tide', group: 'sleep', therapy: 'slowTempo', durationMin: 45, palette: 'tide', free: true,
     track: A('rest_.mp3'),
     sound: { root: 70, breathCycle: 7, ambientDensity: 0.7, cutoff: 420, ambient: 'waves' },
   },
   {
-    id: 'starfield', title: 'Starfield', group: 'sleep', durationMin: 50, palette: 'starfield', free: true, stars: true,
+    id: 'starfield', title: 'Starfield', group: 'sleep', therapy: 'resonantBowls', durationMin: 50, palette: 'starfield', free: true, stars: true,
     track: A('zen1.mp3'),
     sound: { root: 120, breathCycle: 7, ambientDensity: 0.2, cutoff: 1100, ambient: 'shimmer' },
   },
   {
-    id: 'mountain-pass', title: 'Mountain Pass', group: 'sleep', durationMin: 36, palette: 'mountain', free: true,
+    id: 'mountain-pass', title: 'Mountain Pass', group: 'sleep', therapy: 'natureField', durationMin: 36, palette: 'mountain', free: true,
     track: A('nature_.mp3'),
     sound: { root: 105, breathCycle: 6, ambientDensity: 0.6, cutoff: 750, ambient: 'wind' },
   },
 
   // ── Body Scan (4) ────────────────────────────────────────────
   {
-    id: 'slow-descent', title: 'Slow Descent', group: 'bodyScan', durationMin: 20, palette: 'deepWater', free: false,
+    id: 'slow-descent', title: 'Slow Descent', group: 'bodyScan', therapy: 'slowTempo', durationMin: 20, palette: 'deepWater', free: false,
     track: A('meditation1_.mp3'),
     sound: { root: 96, breathCycle: 6, ambientDensity: 0.1, cutoff: 650, ambient: 'none' },
   },
   {
-    id: 'weight-and-warmth', title: 'Weight & Warmth', group: 'bodyScan', durationMin: 22, palette: 'ember', free: false,
+    id: 'weight-and-warmth', title: 'Weight & Warmth', group: 'bodyScan', therapy: 'slowTempo', durationMin: 22, palette: 'ember', free: false,
     track: A('relax1.mp3'),
     sound: { root: 92, breathCycle: 6.5, ambientDensity: 0.15, cutoff: 700, ambient: 'none' },
   },
   {
-    id: 'pressure-release', title: 'Pressure Release', group: 'bodyScan', durationMin: 25, palette: 'deepWater', free: false,
+    id: 'pressure-release', title: 'Pressure Release', group: 'bodyScan', therapy: 'slowTempo', durationMin: 25, palette: 'deepWater', free: false,
     track: A('meditation2_.mp3'),
     sound: { root: 85, breathCycle: 6, ambientDensity: 0.1, cutoff: 600, ambient: 'none' },
   },
   {
-    id: 'stillness', title: 'Stillness', group: 'bodyScan', durationMin: 30, palette: 'dusk', free: false,
+    id: 'stillness', title: 'Stillness', group: 'bodyScan', therapy: 'resonantBowls', durationMin: 30, palette: 'dusk', free: false,
     track: A('forest3.mp3'),
     sound: { root: 110, breathCycle: 7, ambientDensity: 0.12, cutoff: 900, ambient: 'shimmer' },
   },
 
   // ── Breathwork (4) ───────────────────────────────────────────
   {
-    id: 'box-breath', title: 'Box Breath', group: 'breathwork', durationMin: 10, palette: 'ember', free: true,
+    id: 'box-breath', title: 'Box Breath', group: 'breathwork', therapy: 'entrainment', durationMin: 10, palette: 'ember', free: true,
     track: A('om1.mp3'),
     sound: { root: 120, breathCycle: 4, ambientDensity: 0.05, cutoff: 1000, ambient: 'none' },
     breath: { ...BOX },
   },
   {
-    id: '4-7-8-sleep', title: '4-7-8 Sleep', group: 'breathwork', durationMin: 12, palette: 'dusk', free: false,
+    id: '4-7-8-sleep', title: '4-7-8 Sleep', group: 'breathwork', therapy: 'entrainment', durationMin: 12, palette: 'dusk', free: false,
     track: A('om_2vocal.mp3'),
     sound: { root: 110, breathCycle: 7, ambientDensity: 0.05, cutoff: 800, ambient: 'none' },
     breath: {
@@ -107,7 +107,7 @@ export const CATALOG: Session[] = [
     },
   },
   {
-    id: 'coherent-breath', title: 'Coherent Breath', group: 'breathwork', durationMin: 12, palette: 'deepWater', free: false,
+    id: 'coherent-breath', title: 'Coherent Breath', group: 'breathwork', therapy: 'entrainment', durationMin: 12, palette: 'deepWater', free: false,
     track: A('om3_female.mp3'),
     sound: { root: 100, breathCycle: 5.5, ambientDensity: 0.05, cutoff: 900, ambient: 'none' },
     breath: {
@@ -119,7 +119,7 @@ export const CATALOG: Session[] = [
     },
   },
   {
-    id: 'exhale-extended', title: 'Exhale Extended', group: 'breathwork', durationMin: 10, palette: 'ember', free: false,
+    id: 'exhale-extended', title: 'Exhale Extended', group: 'breathwork', therapy: 'entrainment', durationMin: 10, palette: 'ember', free: false,
     track: A('om1.mp3'),
     sound: { root: 105, breathCycle: 6, ambientDensity: 0.05, cutoff: 850, ambient: 'none' },
     breath: {
@@ -133,7 +133,7 @@ export const CATALOG: Session[] = [
 
   // ── Chanting (3) — real vocal chants ─────────────────────────
   {
-    id: 'buddhist-chant', title: 'Buddhist Chant', group: 'chanting', durationMin: 30, palette: 'temple', free: true,
+    id: 'buddhist-chant', title: 'Buddhist Chant', group: 'chanting', therapy: 'vocalResonance', durationMin: 30, palette: 'temple', free: true,
     track: A('om1.mp3'),
     sound: { root: 82, breathCycle: 7, ambientDensity: 0.9, cutoff: 620, ambient: 'chant' },
     subtitles: [
@@ -148,7 +148,7 @@ export const CATALOG: Session[] = [
     ],
   },
   {
-    id: 'hindu-chant', title: 'Hindu Chant', group: 'chanting', durationMin: 30, palette: 'saffron', free: true,
+    id: 'hindu-chant', title: 'Hindu Chant', group: 'chanting', therapy: 'vocalResonance', durationMin: 30, palette: 'saffron', free: true,
     track: A('om_2vocal.mp3'),
     sound: { root: 110, breathCycle: 6, ambientDensity: 0.9, cutoff: 760, ambient: 'chant' },
     subtitles: [
@@ -163,7 +163,7 @@ export const CATALOG: Session[] = [
     ],
   },
   {
-    id: 'sacred-om', title: 'Sacred Om', group: 'chanting', durationMin: 30, palette: 'aurora', free: true,
+    id: 'sacred-om', title: 'Sacred Om', group: 'chanting', therapy: 'vocalResonance', durationMin: 30, palette: 'aurora', free: true,
     track: A('om3_female.mp3'),
     sound: { root: 130, breathCycle: 6.5, ambientDensity: 0.9, cutoff: 900, ambient: 'chant' },
     subtitles: [

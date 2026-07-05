@@ -69,6 +69,42 @@ export function AboutSheet({ open, onClose, focus = 'about' }: { open: boolean; 
 
         {focus === 'sources' && (
           <>
+            <Block title="The science we lean on">
+              Attune's therapy chapters and per-listener prescriptions are grounded in published
+              research:
+              <ul style={list}>
+                <li>
+                  Nature sound &amp; stress recovery — Alvarsson et&nbsp;al. 2010,{' '}
+                  <Src href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2872309/">Int J Env Res Public Health</Src>; forest
+                  soundscapes &amp; restoration,{' '}
+                  <Src href="https://www.nature.com/articles/s41598-025-11469-x">Sci Reports 2025</Src>.
+                </li>
+                <li>
+                  Broadband/white noise &amp; infant sleep onset —{' '}
+                  <Src href="https://www.amplifon.com/uk/audiology-magazine/white-noises">Spencer et&nbsp;al., review</Src>.
+                </li>
+                <li>
+                  Beat-paced audio &amp; anxiety/mood —{' '}
+                  <Src href="https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1539823/full">
+                    Frontiers in Psychology 2025
+                  </Src>.
+                </li>
+                <li>
+                  Slow tempo (60–80 BPM) &amp; vagal tone —{' '}
+                  <Src href="https://journals.sagepub.com/doi/10.1177/2059204319858281">Bretherton et&nbsp;al. 2019</Src>.
+                </li>
+                <li>
+                  Singing-bowl meditation &amp; tension/mood —{' '}
+                  <Src href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5871151/">Goldsby et&nbsp;al. 2017</Src>.
+                </li>
+                <li>
+                  'OM' chanting &amp; limbic deactivation —{' '}
+                  <Src href="https://pubmed.ncbi.nlm.nih.gov/21654968/">Kalyani et&nbsp;al. 2011 (fMRI)</Src>.
+                </li>
+              </ul>
+              Findings are promising but effect sizes vary; Attune presents them as support for
+              relaxation, not medical claims.
+            </Block>
             <Block title="Texts &amp; citations">
               Chant subtitles are traditional, public-domain passages, reproduced with their sources:
               <ul style={list}>
@@ -95,6 +131,14 @@ export function AboutSheet({ open, onClose, focus = 'about' }: { open: boolean; 
         </div>
       </div>
     </Sheet>
+  )
+}
+
+function Src({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+      {children}
+    </a>
   )
 }
 

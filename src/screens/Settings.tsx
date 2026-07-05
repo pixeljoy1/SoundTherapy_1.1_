@@ -10,7 +10,7 @@ import { AGE_LABEL, GOAL_LABEL, TIMER_OPTIONS } from '../state/types'
 import { timerLabel } from '../state/util'
 
 export function Settings() {
-  const { settingsOpen, openSettings, openPayment, persisted, patchSettings, setPremium } = useStore()
+  const { settingsOpen, openSettings, openPayment, persisted, patchSettings, setPremium, logout } = useStore()
   const s = persisted.settings
 
   return (
@@ -122,6 +122,29 @@ export function Settings() {
           </button>
         )}
       </div>
+
+      <button
+        onClick={logout}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          marginTop: 20,
+          minHeight: 46,
+          width: '100%',
+          borderRadius: 100,
+          background: 'var(--chip)',
+          border: '1px solid var(--hairline)',
+          color: 'var(--text-primary)',
+          fontSize: 14,
+        }}
+      >
+        ⇆ Switch listener / Log out
+      </button>
+      <p style={{ fontSize: 11, color: 'var(--text-ghost)', margin: '8px 0 0', textAlign: 'center' }}>
+        Your preferences stay saved. Next time, Attune offers one-tap continue.
+      </p>
 
       <a
         href="https://github.com/pixeljoy1/SoundTherapy_1.1_/releases/download/android/attune.apk"
