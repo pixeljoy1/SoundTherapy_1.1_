@@ -30,6 +30,8 @@ export interface Therapy {
   id: TherapyId
   /** Chapter number on the Home journal, "01"…"07". */
   no: string
+  /** Agent-style codename for the Therapy Matrix (quiet-systems layer). */
+  code: string
   name: string
   tagline: string
   /** One evidence sentence, reader-facing. */
@@ -52,6 +54,7 @@ export const THERAPIES: Record<TherapyId, Therapy> = {
   natureField: {
     id: 'natureField',
     no: '01',
+    code: 'NATURE_FIELD',
     name: 'Nature Field',
     tagline: 'Water, birdsong, forest air.',
     science:
@@ -71,6 +74,7 @@ export const THERAPIES: Record<TherapyId, Therapy> = {
   noiseColor: {
     id: 'noiseColor',
     no: '02',
+    code: 'RAIN_KEEPER',
     name: 'Rain & Broadband',
     tagline: "Steady rain — nature's pink noise.",
     science:
@@ -89,6 +93,7 @@ export const THERAPIES: Record<TherapyId, Therapy> = {
   asmrStudy: {
     id: 'asmrStudy',
     no: '03',
+    code: 'WHISPER_TUTOR',
     name: 'ASMR & Study Beds',
     tagline: 'Whisper-soft sound for deep work.',
     science:
@@ -109,6 +114,7 @@ export const THERAPIES: Record<TherapyId, Therapy> = {
   entrainment: {
     id: 'entrainment',
     no: '04',
+    code: 'PULSE_PACER',
     name: 'Paced Entrainment',
     tagline: 'Breath and tone in slow rhythm.',
     science:
@@ -127,6 +133,7 @@ export const THERAPIES: Record<TherapyId, Therapy> = {
   slowTempo: {
     id: 'slowTempo',
     no: '05',
+    code: 'TEMPO_HEART',
     name: 'Slow Tempo',
     tagline: 'Sound at the pace of a resting heart.',
     science:
@@ -145,6 +152,7 @@ export const THERAPIES: Record<TherapyId, Therapy> = {
   resonantBowls: {
     id: 'resonantBowls',
     no: '06',
+    code: 'BOWL_KEEPER',
     name: 'Resonant Instruments',
     tagline: 'Bowls, flute and long decay.',
     science:
@@ -163,6 +171,7 @@ export const THERAPIES: Record<TherapyId, Therapy> = {
   vocalResonance: {
     id: 'vocalResonance',
     no: '07',
+    code: 'OM_VOICE',
     name: 'Vocal Resonance',
     tagline: 'The oldest instrument is a voice.',
     science:

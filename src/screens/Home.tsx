@@ -29,6 +29,9 @@ import { emailThemeRequest, makeId } from '../state/themeRequest'
 import { profileHues, AGE_ACCENT } from '../theme/profileTheme'
 import { ART, PRESCRIPTION, PRESCRIPTION_NOTE, THERAPIES, THERAPY_ORDER, Therapy } from '../therapy/therapies'
 import { TherapyInfoSheet } from '../components/TherapyInfoSheet'
+import { Reveal, StatusLine } from '../components/Reveal'
+import { ThemeToggle } from '../components/ThemeToggle'
+import { APP_VERSION } from '../version'
 import {
   AGE_BENEFIT,
   AGE_LABEL,
@@ -117,8 +120,10 @@ export function Home({
           </span>
           <span aria-hidden style={{ fontSize: 14, color: 'var(--accent)', letterSpacing: -1 }}>◦◉◦</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="mono privacy-chip">on-device · private</span>
           <VersionPill />
+          <ThemeToggle />
           <button
             aria-label="Switch listener or log out"
             title="Switch listener"
@@ -135,19 +140,31 @@ export function Home({
 
       <PullToRefresh style={scroll}>
         <div style={{ maxWidth: 860, margin: '0 auto', width: '100%', position: 'relative' }}>
-          {/* ── hero ── */}
-          <ResonanceField hues={profileHues(age, goal)} height={340} />
-          <div style={{ position: 'relative', padding: '34px 0 0' }}>
-            <div className="label reveal d1" style={{ marginBottom: 12 }}>
+          {/* ── hero: one full viewport, nothing rushed ── */}
+          <ResonanceField hues={profileHues(age, goal)} height={460} />
+          <div className="hero-panel">
+            <div className="mono reveal d1" style={{ marginBottom: 18 }}>
+              ATTUNE&nbsp;//&nbsp;SOUND_THERAPY&nbsp;{APP_VERSION}&nbsp;·&nbsp;ON-DEVICE&nbsp;·&nbsp;PRIVATE
+            </div>
+            <div className="label reveal d1" style={{ marginBottom: 14 }}>
               {greeting()}
               {name ? `, ${name}` : ''}
             </div>
             <h1
               className="serif ink reveal d2"
-              style={{ fontSize: 'clamp(40px, 8.5vw, 76px)', margin: '0 0 20px', lineHeight: 1.02, maxWidth: 640, letterSpacing: -1 }}
+              style={{
+                fontSize: 'clamp(44px, 11vw, 104px)',
+                margin: '0 0 10px',
+                lineHeight: 0.98,
+                maxWidth: 760,
+                letterSpacing: -1.5,
+              }}
             >
               {invitation}
             </h1>
+            <div className="serif-i reveal d3" style={{ fontSize: 'clamp(18px, 3vw, 26px)', color: 'var(--text-secondary)', marginBottom: 26 }}>
+              Sound, prescribed like therapy. Played like art.
+            </div>
 
             <button className="reveal d3" onClick={() => setProfileOpen(true)} aria-label="Change therapy profile" style={profileChip}>
               <span className="pulse-dot" />
@@ -157,23 +174,106 @@ export function Home({
               <span style={{ color: 'var(--text-secondary)' }}>· change</span>
             </button>
 
-            <div style={{ height: 16 }} />
-            <div className="reveal d4" style={{ display: 'inline-flex', gap: 12 }}>
-              <Pill onClick={onAutoStart} style={{ minHeight: 48 }}>
+            <div style={{ height: 18 }} />
+            <div className="reveal d4" style={{ display: 'inline-flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Pill onClick={onAutoStart} style={{ minHeight: 50 }}>
                 ✦&nbsp;&nbsp;Decide for me
               </Pill>
+              <button
+                className="evidence-btn"
+                onClick={() => document.getElementById('therapy-matrix')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              >
+                Meet the seven therapies ↓
+              </button>
             </div>
-            <p className="reveal d5" style={{ fontSize: 12, color: 'var(--text-ghost)', margin: '14px 0 0' }}>
+            <p className="reveal d5" style={{ fontSize: 12, color: 'var(--text-ghost)', margin: '16px 0 0' }}>
               Every session free for 30 seconds · Premium for the full length
             </p>
+
+            <div className="scroll-cue mono" aria-hidden>
+              <span>↓</span>
+              <span>scroll</span>
+            </div>
           </div>
+
+          {/* ── the therapy matrix: seven agents, one listener ── */}
+          <Reveal id="therapy-matrix" style={{ paddingTop: 26 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+              <span className="mono">THE THERAPY MATRIX</span>
+              <span className="mono" style={{ color: 'var(--text-ghost)' }}>7 agents · 1 listener</span>
+            </div>
+            <div className="matrix">
+              {THERAPY_ORDER.map((t) => {
+                const th = THERAPIES[t]
+                const prescribed = rx.includes(t)
+                return (
+                  <button
+                    key={t}
+                    className="matrix-cell"
+                    onClick={() => document.getElementById(`ch-${t}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    aria-label={`Go to ${th.name}`}
+                  >
+                    <img src={ART(th.art)} alt="" aria-hidden loading="lazy" />
+                    <span className="mono" style={{ color: prescribed ? 'var(--accent)' : 'var(--text-ghost)' }}>
+                      {th.no}&nbsp;{th.code}
+                    </span>
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'flex-start' }}>
+                      <span className="serif" style={{ fontSize: 17, lineHeight: 1.1, color: 'var(--text-primary)' }}>{th.name}</span>
+                      <span className="mono-lg" style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        {prescribed ? (
+                          <>
+                            <span className="status-dot" />
+                            <span style={{ color: 'var(--accent)' }}>prescribed</span>
+                          </>
+                        ) : (
+                          <span style={{ color: 'var(--text-ghost)' }}>standing by</span>
+                        )}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
+              {/* the listener's own cell */}
+              <div className="matrix-cell" style={{ background: 'var(--accent-soft)' }}>
+                <span className="mono" style={{ color: 'var(--accent)' }}>∞&nbsp;YOU</span>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <span className="serif" style={{ fontSize: 17, lineHeight: 1.1 }}>{name.trim() || AGE_LABEL[age]}</span>
+                  <span className="mono-lg" style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <span className="status-dot" />
+                    <span style={{ color: 'var(--accent)' }}>listening</span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* ── how it works: four quiet steps ── */}
+          <Reveal style={{ marginTop: 34 }}>
+            <div className="process">
+              {(
+                [
+                  ['01', 'Tune', 'age, goal, look'],
+                  ['02', 'Listen', 'sound does the work'],
+                  ['03', 'Fade', 'everything to silence'],
+                  ['04', 'Rest', 'no streaks, no noise'],
+                ] as const
+              ).map(([n, t, d]) => (
+                <div key={n}>
+                  <div className="mono" style={{ color: 'var(--accent)', marginBottom: 8 }}>{n}</div>
+                  <div className="serif" style={{ fontSize: 20, marginBottom: 4 }}>{t}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{d}</div>
+                </div>
+              ))}
+            </div>
+          </Reveal>
 
           <div style={{ height: 40 }} />
 
           {/* ── study spotlight — the unmissable door for students ── */}
           {student && (
-            <section
-              className="soft-panel reveal d5"
+            <Reveal
+              as="section"
+              className="soft-panel"
               style={studyBanner}
               onClick={() => onSelect(studySession)}
               role="button"
@@ -216,19 +316,19 @@ export function Home({
                   </button>
                 </div>
               </div>
-            </section>
+            </Reveal>
           )}
 
           {/* ── adult: therapy, stated plainly ── */}
           {!student && (
-            <div className="reveal d5" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', margin: '0 0 6px' }}>
+            <Reveal style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', margin: '0 0 6px' }}>
               <p className="serif-i" style={{ fontSize: 16, color: 'var(--text-secondary)', margin: 0 }}>
                 Sound therapy, grounded in clinical research — every chapter cites its studies.
               </p>
               <button className="evidence-btn" onClick={() => setEvidence(rxPrimary)}>
                 The evidence ↗
               </button>
-            </div>
+            </Reveal>
           )}
 
           <div style={{ height: student ? 34 : 24 }} />
@@ -245,9 +345,15 @@ export function Home({
           </div>
 
           {/* ── the prescription — research mapped to this listener ── */}
-          <section className="soft-panel" style={{ ...chapterBox, marginTop: 44 }}>
+          <Reveal as="section" className="soft-panel" style={{ ...chapterBox, marginTop: 44 }}>
             <TherapyMesh hues={rxPrimary.hues} opacity={0.2} />
             <div style={{ position: 'relative' }}>
+              <div style={{ marginBottom: 14 }}>
+                <StatusLine
+                  steps={['reading profile', 'matching studies', 'composing prescription']}
+                  doneLabel={`PRESCRIPTION READY — ${rxPrimary.code}`}
+                />
+              </div>
               <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 300px', minWidth: 260 }}>
                   <div className="label" style={{ color: 'var(--accent)', marginBottom: 10 }}>
@@ -276,7 +382,7 @@ export function Home({
                 ))}
               </div>
             </div>
-          </section>
+          </Reveal>
 
           {/* ── continue ── */}
           <div style={{ marginTop: 40 }}>
@@ -286,14 +392,17 @@ export function Home({
             <SessionCard session={featured} onSelect={onSelect} onPreview={onPreview} onLocked={onLocked} featured fluid />
           </div>
 
-          {/* ── six therapy chapters ── */}
+          {/* ── seven therapy chapters ── */}
           <div className="label sect" style={{ margin: '52px 0 6px' }}>
-            The six therapies
+            The seven therapies
           </div>
           {chapters.map(({ therapy, items }) => (
-            <section key={therapy.id} className="soft-panel" style={chapterBox}>
+            <Reveal as="section" key={therapy.id} id={`ch-${therapy.id}`} className="soft-panel" style={chapterBox}>
               <TherapyMesh hues={therapy.hues} />
               <div style={{ position: 'relative' }}>
+                <div className="mono" style={{ marginBottom: 12, color: 'var(--text-ghost)' }}>
+                  {therapy.no}&nbsp;//&nbsp;{therapy.code}
+                </div>
                 <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', flexWrap: 'wrap' }}>
                   <div style={{ flex: '1 1 300px', minWidth: 260 }}>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18, flexWrap: 'wrap' }}>
@@ -327,7 +436,7 @@ export function Home({
                   ))}
                 </div>
               </div>
-            </section>
+            </Reveal>
           ))}
 
           {/* ── your themes ── */}
@@ -342,6 +451,23 @@ export function Home({
               ))}
             </div>
           </div>
+
+          {/* ── the quiet manifesto — true, and worth saying ── */}
+          <Reveal style={{ marginTop: 56 }}>
+            <div style={{ border: '1px solid var(--hairline)', borderRadius: 22, padding: 'clamp(20px, 4vw, 32px)', background: 'var(--chip)' }}>
+              <div className="mono" style={{ marginBottom: 14 }}>MANIFESTO</div>
+              <div className="mono-lg" style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 16 }}>
+                <span>network_calls:&nbsp;&nbsp;<span style={{ color: 'var(--accent)' }}>NONE</span></span>
+                <span>accounts:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style={{ color: 'var(--accent)' }}>NONE</span></span>
+                <span>your_data:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style={{ color: 'var(--accent)' }}>THIS_DEVICE_ONLY</span></span>
+                <span>ads:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style={{ color: 'var(--accent)' }}>NEVER</span></span>
+              </div>
+              <p className="serif-i" style={{ fontSize: 17, lineHeight: 1.5, color: 'var(--text-secondary)', margin: 0, maxWidth: 520 }}>
+                A quiet sanctuary for the family. Every profile, preference and habit stays in your
+                pocket — Attune has nothing to sync because it keeps nothing from you.
+              </p>
+            </div>
+          </Reveal>
 
           {/* ── editorial footer ── */}
           <div style={{ padding: '72px 0 20px', textAlign: 'center' }}>
