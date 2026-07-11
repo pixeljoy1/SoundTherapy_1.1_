@@ -1,0 +1,32 @@
+/* Only layout scaffolding lives here. Every visual token — color, radius,
+   typography, spacing — resolves through Shidoka Foundation CSS variables so
+   the surface is a faithful mirror of the Figma library. */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--kd-color-background-page-default);
+  color: var(--kd-color-text-level-primary);
+  font-family: var(--kd-font-family-primary, 'Inter', system-ui, sans-serif);
+}
+
+.app-shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
+.app-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 0;
+}
+
+.app-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--kd-spacing-48, 48px) var(--kd-spacing-24, 24px);
+}
