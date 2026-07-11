@@ -1,19 +1,23 @@
-import { useState, type FormEvent } from 'react'
+import { type FormEvent } from 'react'
 
 /**
  * LoginForm — the sign-in card.
  *
- * Every visible control is a real Shidoka element (kyn-text-input, kyn-checkbox,
- * kyn-button, kyn-link). The wrapping <section> is layout-only and carries no
- * visual styling that would drift from the Foundry tokens.
+ * Uncontrolled inputs: values are read from FormData on submit. Web components
+ * emit custom events (kyn-text-input fires on-input, kyn-checkbox fires
+ * on-checkbox-change), which React's synthetic event system doesn't bridge; the
+ * FormData path avoids that friction while still using real Shidoka elements.
  */
 export function LoginForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [remember, setRemember] = useState(false)
-
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const form = event.currentTarget
+    // kyn-text-input exposes its value via the light-DOM <input> it wraps.
+    const email =
+      (form.querySelector('[name="email"] input') as HTMLInputElement | null)?.value ?? ''
+    const remember = !!(
+      form.querySelector('[name="remember"]') as HTMLElement & { checked?: boolean }
+    )?.checked
     // Wired to a real orchestrator auth call in the next iteration.
     console.log('sign-in submitted', { email, remember })
   }
@@ -61,10 +65,7 @@ export function LoginForm() {
           type="email"
           placeholder="you@kyndryl.com"
           required
-          value={email}
-          onInput={(event) =>
-            setEmail((event.target as HTMLInputElement).value ?? '')
-          }
+          autoComplete="email"
         />
 
         <kyn-text-input
@@ -73,10 +74,7 @@ export function LoginForm() {
           type="password"
           placeholder="Enter your password"
           required
-          value={password}
-          onInput={(event) =>
-            setPassword((event.target as HTMLInputElement).value ?? '')
-          }
+          autoComplete="current-password"
         />
 
         <div
@@ -87,14 +85,7 @@ export function LoginForm() {
             gap: 12,
           }}
         >
-          <kyn-checkbox
-            name="remember"
-            value="1"
-            checked={remember}
-            onInput={(event) =>
-              setRemember((event.target as HTMLInputElement).checked)
-            }
-          >
+          <kyn-checkbox name="remember" value="1">
             Remember this device
           </kyn-checkbox>
           <kyn-link href="/forgot" kind="primary">

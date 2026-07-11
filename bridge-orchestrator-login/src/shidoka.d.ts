@@ -18,35 +18,35 @@ type WC<T = Record<string, unknown>> = DetailedHTMLProps<
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      'kyn-header': WC<{ rootUrl?: string; appTitle?: string; divider?: boolean }>
-      'kyn-header-nav': WC
+      'kyn-header': WC<{ rootUrl?: string; appTitle?: string }>
+      'kyn-header-nav': WC<{ slot?: string }>
       'kyn-header-link': WC<{ href?: string; isActive?: boolean }>
-      'kyn-header-user-profile': WC<{ name?: string; subtitle?: string }>
+      'kyn-header-user-profile': WC<{ name?: string; subtitle?: string; email?: string }>
 
-      'kyn-side-nav': WC<{ pinned?: boolean }>
-      'kyn-side-nav-link': WC<{ href?: string; expanded?: boolean; isActive?: boolean }>
+      'kyn-local-nav': WC<{ pinned?: boolean; manualToggleVariant?: boolean }>
+      'kyn-local-nav-link': WC<{ href?: string; active?: boolean; expanded?: boolean }>
 
-      'kyn-footer': WC<{ rootUrl?: string; copyright?: string }>
-      'kyn-footer-nav': WC
-      'kyn-footer-link': WC<{ href?: string }>
+      'kyn-footer': WC<{ rootUrl?: string }>
 
       'kyn-button': WC<{
-        kind?: 'primary' | 'secondary' | 'tertiary' | 'ghost'
+        kind?: 'primary' | 'secondary' | 'tertiary' | 'ghost' | 'outline'
         size?: 'sm' | 'md' | 'lg'
         type?: 'button' | 'submit' | 'reset'
         disabled?: boolean
+        name?: string
+        value?: string
       }>
 
       'kyn-text-input': WC<{
         name?: string
         label?: string
-        type?: 'text' | 'email' | 'password' | 'tel' | 'url'
+        type?: 'text' | 'email' | 'password' | 'tel' | 'url' | 'search'
         placeholder?: string
         value?: string
         required?: boolean
-        invalid?: boolean
         invalidText?: string
         caption?: string
+        autoComplete?: string
       }>
 
       'kyn-checkbox': WC<{
@@ -55,7 +55,11 @@ declare global {
         checked?: boolean
       }>
 
-      'kyn-link': WC<{ href?: string; kind?: 'primary' | 'inline' | 'ai' }>
+      'kyn-link': WC<{
+        href?: string
+        kind?: 'primary' | 'secondary'
+        standalone?: boolean
+      }>
     }
   }
 }

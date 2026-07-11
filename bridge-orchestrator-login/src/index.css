@@ -2,6 +2,13 @@
    typography, spacing — resolves through Shidoka Foundation CSS variables so
    the surface is a faithful mirror of the Figma library. */
 
+/* Shidoka color tokens use the CSS light-dark() function, which needs an
+   explicit color-scheme on :root to resolve. Without this, kyn-button and
+   friends paint transparent because their backgrounds evaluate to <no value>. */
+:root {
+  color-scheme: light dark;
+}
+
 html,
 body,
 #root {
