@@ -1,7 +1,7 @@
 // The simulation engine. Runs entirely on plain arrays for speed; React only
 // re-reads via a `revision` counter so we don't recreate objects each frame.
 
-import { pickName } from './names'
+import { BUILDING_NAME_POOLS, pickName } from './names'
 import { chance, makeRng, pick, type Rng } from './rng'
 import type {
   Activity,
@@ -10,11 +10,19 @@ import type {
   Emotion,
   Interaction,
   Person,
+  PlannedBuilding,
   Role,
   World,
   WorldEvent,
 } from './types'
-import { isPassable } from './world'
+import {
+  clearRect,
+  isPassable,
+  makeBuilding,
+  placeBuilding,
+  pickHomeName,
+  pickUnique,
+} from './world'
 
 // --- Time helpers ---------------------------------------------------------
 
@@ -566,6 +574,266 @@ function decideInteractionKind(a: Person, b: Person): Interaction['kind'] {
   return 'chat'
 }
 
+// --- Construction --------------------------------------------------------
+
+// Footprint (grid cells) + labor budget for each building the community can
+// raise. Effort accumulates when idle adults are within the site perimeter.
+const BUILD_SPECS: Record<BuildingType, { w: number; h: number; effort: number }> = {
+  home: { w: 3, h: 3, effort: 3 },
+  temple: { w: 5, h: 4, effort: 12 },
+  ashram: { w: 4, h: 3, effort: 8 },
+  market: { w: 5, h: 4, effort: 8 },
+  school: { w: 4, h: 3, effort: 6 },
+  farm: { w: 5, h: 4, effort: 6 },
+  workshop: { w: 4, h: 3, effort: 4 },
+  clinic: { w: 3, h: 3, effort: 5 },
+  panchayat: { w: 4, h: 3, effort: 6 },
+  court: { w: 4, h: 3, effort: 8 },
+  jail: { w: 4, h: 3, effort: 8 },
+  gallows: { w: 3, h: 3, effort: 3 },
+  well: { w: 2, h: 2, effort: 2 },
+  chai_stall: { w: 2, h: 2, effort: 2 },
+}
+
+// How badly does the commune need this next? Higher = more urgent.
+function buildingDemand(world: World): Array<[BuildingType, number]> {
+  const count = (t: BuildingType) => world.buildings.filter((b) => b.type === t).length
+  const planned = (t: BuildingType) => world.planned.filter((p) => p.type === t).length
+  const alive = world.people.filter((p) => p.alive)
+  const pop = alive.length
+  const children = alive.filter((p) => p.age < 16).length
+  const merchants = alive.filter((p) => p.role === 'merchant').length
+  const priests = alive.filter((p) => p.role === 'priest' || p.role === 'saint').length
+  const wanted = alive.filter((p) => p.wanted).length
+  const criminals = alive.filter((p) => p.isCriminal).length
+  const executions = world.stats.executions
+  const homeless = alive.filter((p) => !world.buildings.some((b) => b.id === p.homeId)).length
+  const avgHunger = pop ? alive.reduce((s, p) => s + p.hunger, 0) / pop : 0
+
+  const demand: Array<[BuildingType, number]> = []
+  const push = (t: BuildingType, score: number) => {
+    if (score > 0 && planned(t) === 0) demand.push([t, score])
+  }
+  push('home', 3 + homeless * 4 + (pop > world.buildings.filter((b) => b.type === 'home').length * 3 ? 6 : 0))
+  push('farm', (avgHunger > 0.4 ? 12 : 6) + (count('farm') < 1 ? 8 : count('farm') < 2 ? 3 : 0))
+  push('market', count('market') === 0 && merchants >= 1 ? 12 : merchants > count('market') * 3 ? 4 : 0)
+  push('temple', count('temple') === 0 ? 14 + priests * 2 : 1)
+  push('school', count('school') === 0 && children >= 3 ? 11 : 0)
+  push('workshop', count('workshop') < 2 ? 6 : 0)
+  push('clinic', count('clinic') === 0 && pop >= 18 ? 9 : 0)
+  push('panchayat', count('panchayat') === 0 && pop >= 10 ? 8 : 0)
+  push('ashram', count('ashram') === 0 && priests >= 1 ? 5 : 0)
+  push('court', count('court') === 0 && criminals >= 2 ? 10 : 0)
+  push('jail', count('jail') === 0 && wanted >= 1 ? 12 : 0)
+  push('gallows', count('gallows') === 0 && executions === 0 && criminals >= 3 ? 3 : 0)
+  push('chai_stall', count('chai_stall') === 0 && pop >= 8 ? 5 : 0)
+  push('well', pop > count('well') * 25 ? 4 : 0)
+  return demand.sort((a, b) => b[1] - a[1])
+}
+
+function proposePlan(world: World, rng: Rng): PlannedBuilding | null {
+  const demands = buildingDemand(world)
+  if (!demands.length) return null
+  // Only allow a few concurrent construction sites so builders aren't spread
+  // too thin.
+  if (world.planned.length >= 3) return null
+  const [type] = demands[0]!
+  const spec = BUILD_SPECS[type]
+  const existing = [
+    ...world.buildings.map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h })),
+    ...world.planned.map((p) => ({ x: p.x, y: p.y, w: p.w, h: p.h })),
+  ]
+  const pos = placeBuilding(rng, world.cols, world.rows, spec.w, spec.h, existing)
+  if (!pos) return null
+  const planned: PlannedBuilding = {
+    id: world.nextPlannedId++,
+    type,
+    x: pos.x,
+    y: pos.y,
+    w: spec.w,
+    h: spec.h,
+    cx: pos.x + spec.w / 2,
+    cy: pos.y + spec.h / 2,
+    progress: 0,
+    effortNeeded: spec.effort,
+    effortDone: 0,
+    reason: reasonFor(type),
+  }
+  // Ground is cleared so builders can walk in.
+  clearRect(world.walls, world.cols, pos.x, pos.y, spec.w, spec.h)
+  world.planned.push(planned)
+  log(world, 'note', `The commune breaks ground on a new ${prettyType(type)} — ${planned.reason}.`)
+  return planned
+}
+
+function reasonFor(t: BuildingType): string {
+  switch (t) {
+    case 'home': return 'for a homeless family'
+    case 'temple': return 'so the faithful may gather'
+    case 'ashram': return 'to shelter the seekers'
+    case 'market': return 'to formalise trade'
+    case 'school': return 'so the children may learn'
+    case 'farm': return 'to feed the growing settlement'
+    case 'workshop': return 'to house the craftspeople'
+    case 'clinic': return 'to tend the sick'
+    case 'panchayat': return 'to seat the council'
+    case 'court': return 'to hear disputes'
+    case 'jail': return 'to hold the wanted'
+    case 'gallows': return 'for the gravest sentences'
+    case 'well': return 'so no one thirsts'
+    case 'chai_stall': return 'for tea and news'
+  }
+}
+
+function prettyType(t: BuildingType): string {
+  return t.replace('_', ' ')
+}
+
+function nearestPlanned(world: World, x: number, y: number): PlannedBuilding | undefined {
+  let best: PlannedBuilding | undefined
+  let bestD = Infinity
+  for (const pl of world.planned) {
+    const d = dist2(x, y, pl.cx * world.cellSize, pl.cy * world.cellSize)
+    if (d < bestD) {
+      bestD = d
+      best = pl
+    }
+  }
+  return best
+}
+
+function pickBuilderName(world: World, type: BuildingType, rng: Rng): string {
+  if (type === 'home') {
+    // Home naming happens at completion via family assignment.
+    return pickUnique(rng, BUILDING_NAME_POOLS.home, world.nameUsage)
+  }
+  const pool = BUILDING_NAME_POOLS[type] ?? BUILDING_NAME_POOLS.home
+  return pickUnique(rng, pool, world.nameUsage)
+}
+
+function completeConstruction(world: World, pl: PlannedBuilding, rng: Rng): void {
+  const idx = world.planned.indexOf(pl)
+  if (idx >= 0) world.planned.splice(idx, 1)
+
+  // Name it.
+  let name = pickBuilderName(world, pl.type, rng)
+  let familyId: number | undefined
+
+  if (pl.type === 'home') {
+    // Give it to a family without a home, or forge a new one for founder-less
+    // adults. Naming follows the founder surname.
+    const orphan = world.people.find(
+      (p) => p.alive && p.age >= 16 && !world.buildings.some((b) => b.id === p.homeId),
+    )
+    let family = orphan ? world.families.find((f) => f.id === orphan.familyId) : undefined
+    if (!family) {
+      const adult = orphan ?? world.people.find((p) => p.alive && p.age >= 16)
+      if (adult) {
+        family = {
+          id: world.nextFamilyId++,
+          surname: adult.name.split(' ').slice(-1)[0]!,
+          tribe: adult.tribe,
+          homeId: world.nextBuildingId,
+          members: new Set([adult.id]),
+        }
+        world.families.push(family)
+      }
+    }
+    if (family) {
+      name = pickHomeName(rng, family, world.nameUsage)
+      familyId = family.id
+    }
+  }
+
+  const building = makeBuilding(world.nextBuildingId++, pl.type, name, pl.x, pl.y, pl.w, pl.h)
+  if (familyId !== undefined) building.familyId = familyId
+  world.buildings.push(building)
+  world.stats.buildingsRaised++
+
+  if (pl.type === 'home' && familyId !== undefined) {
+    const fam = world.families.find((f) => f.id === familyId)!
+    fam.homeId = building.id
+    for (const memberId of fam.members) {
+      const m = personById(world, memberId)
+      if (m) m.homeId = building.id
+    }
+    log(world, 'note', `${name} was raised — ${fam.surname} family takes shelter.`)
+  } else {
+    log(world, 'note', `${name} opens its doors — a new ${prettyType(pl.type)} for the commune.`)
+  }
+}
+
+function advanceConstruction(world: World, dt: number, rng: Rng): void {
+  // Effort accrues from every alive adult within site perimeter whose current
+  // activity is 'building'.
+  for (const pl of [...world.planned]) {
+    let workers = 0
+    for (const p of world.people) {
+      if (!p.alive) continue
+      if (p.activity !== 'building') continue
+      if (p.targetBuildingId !== -pl.id) continue // sentinel: negative id = plan
+      if (
+        Math.abs(p.x / world.cellSize - pl.cx) < pl.w * 0.7 &&
+        Math.abs(p.y / world.cellSize - pl.cy) < pl.h * 0.7
+      ) {
+        workers++
+      }
+    }
+    if (workers > 0) {
+      pl.effortDone += workers * dt * 1.2
+      pl.progress = Math.min(1, pl.effortDone / pl.effortNeeded)
+      if (pl.progress >= 1) completeConstruction(world, pl, rng)
+    }
+  }
+}
+
+// The construction planner runs on a coarse cadence, not every substep.
+function maybePropose(world: World, rng: Rng): void {
+  // Rate: ~once every 1.5 sim years, gated by having enough labour.
+  const adults = world.people.filter((p) => p.alive && p.age >= 16).length
+  if (adults < 3) return
+  if (chance(rng, 0.02)) proposePlan(world, rng)
+}
+
+// --- Thriving score ------------------------------------------------------
+
+const HISTORY_LIMIT = 120
+let thrivingAcc = 0
+
+function sampleThriving(world: World): number {
+  const alive = world.people.filter((p) => p.alive)
+  const pop = alive.length
+  if (pop === 0) return 0
+  const avg = (fn: (p: Person) => number) => alive.reduce((s, p) => s + fn(p), 0) / pop
+  const avgHunger = avg((p) => p.hunger)
+  const avgFaith = avg((p) => p.faith)
+  const avgWealth = avg((p) => p.wealth)
+  const avgFatigue = avg((p) => p.fatigue)
+  const avgMorality = avg((p) => p.morality)
+  const wanted = alive.filter((p) => p.wanted).length
+  const kids = alive.filter((p) => p.age < 16).length
+  const elders = alive.filter((p) => p.age >= 65).length
+
+  let s = 50
+  s += 22 * clamp(avgFaith - 0.4, -0.5, 0.5)
+  s += 40 * clamp(0.55 - avgHunger, -0.6, 0.6)
+  s += 15 * clamp((avgWealth - 300) / 500, -1, 1)
+  s += 12 * clamp(avgMorality - 0.5, -0.5, 0.5)
+  s -= 22 * clamp(avgFatigue - 0.55, -0.4, 0.5)
+  s -= wanted * 3
+  s += Math.min(10, world.buildings.length * 0.7)
+  s += Math.min(4, world.planned.length * 1.5)
+  s += (kids > 0 ? 4 : -4) + (elders > 0 ? 2 : 0)
+  // Population trend proxy: births minus deaths so far.
+  const netLifetime = world.stats.births - world.stats.deaths
+  s += clamp(netLifetime, -12, 12) * 0.7
+  return clamp(s, 0, 100)
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v))
+}
+
 // --- Main tick -----------------------------------------------------------
 
 export interface SimClock {
@@ -602,6 +870,9 @@ function stepOnce(world: World, clock: SimClock, dt: number): void {
 
   const rng = clock.rng
 
+  // Construction planner: coarse cadence.
+  maybePropose(world, rng)
+
   // Per-person updates.
   for (const p of world.people) {
     ageAndNeeds(world, p, dtYears, dt, rng)
@@ -612,8 +883,25 @@ function stepOnce(world: World, clock: SimClock, dt: number): void {
     const reached =
       Math.abs(p.targetX - p.x) < world.cellSize * 0.8 && Math.abs(p.targetY - p.y) < world.cellSize * 0.8
     if (reached || chance(rng, 0.01 * (60 * dt))) {
-      const target = pickDailyTarget(world, p, rng)
-      if (target) setTargetBuilding(world, p, target, 2)
+      // Occasionally divert idle adults to a construction site — this is how
+      // civic buildings actually get raised in Samaaj.
+      const canBuild =
+        p.age >= 16 &&
+        p.role !== 'saint' &&
+        p.role !== 'judge' &&
+        !p.wanted &&
+        p.activity !== 'jailed' &&
+        !p.sentencedToDeath
+      const plan = world.planned.length > 0 ? nearestPlanned(world, p.x, p.y) : undefined
+      if (canBuild && plan && chance(rng, 0.35)) {
+        const jitter = () => (rng() - 0.5) * world.cellSize
+        p.targetX = plan.cx * world.cellSize + jitter()
+        p.targetY = plan.cy * world.cellSize + jitter()
+        p.targetBuildingId = -plan.id
+      } else {
+        const target = pickDailyTarget(world, p, rng)
+        if (target) setTargetBuilding(world, p, target, 2)
+      }
     }
 
     // Motion — modulated by age and activity.
@@ -627,15 +915,41 @@ function stepOnce(world: World, clock: SimClock, dt: number): void {
             : 34
     stepMotion(world, p, dt, speedFactor)
 
-    // Assign activity for display.
-    const b = world.buildings.find((bb) => bb.id === p.targetBuildingId)
-    p.activity = assignActivity(world, p, b)
+    // Assign activity for display. Plan targets take precedence.
+    if (p.targetBuildingId !== undefined && p.targetBuildingId < 0) {
+      const pl = world.planned.find((q) => -q.id === p.targetBuildingId)
+      if (pl) {
+        const onSite =
+          Math.abs(p.x / world.cellSize - pl.cx) < pl.w * 0.6 &&
+          Math.abs(p.y / world.cellSize - pl.cy) < pl.h * 0.6
+        p.activity = onSite ? 'building' : 'walking'
+      } else {
+        p.targetBuildingId = undefined
+        p.activity = 'idle'
+      }
+    } else {
+      const b = world.buildings.find((bb) => bb.id === p.targetBuildingId)
+      p.activity = assignActivity(world, p, b)
+    }
     p.emotion = updateEmotion(p, p.activity)
 
     // Justice: process gallows arrivals.
     processExecution(world, p)
     // Chance of crime.
     tryCrime(world, p, rng)
+  }
+
+  // Construction progress.
+  advanceConstruction(world, dt, rng)
+
+  // Sample thriving score on a coarse cadence and push to history.
+  thrivingAcc += dt
+  if (thrivingAcc >= 0.5) {
+    thrivingAcc = 0
+    const inst = sampleThriving(world)
+    world.thrivingScore = world.thrivingScore * 0.85 + inst * 0.15
+    world.thrivingHistory.push(world.thrivingScore)
+    if (world.thrivingHistory.length > HISTORY_LIMIT) world.thrivingHistory.shift()
   }
 
   // Interaction & event pass.

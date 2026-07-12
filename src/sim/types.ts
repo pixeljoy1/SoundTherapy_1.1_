@@ -54,6 +54,7 @@ export type Emotion =
 export type Activity =
   | 'idle'
   | 'walking'
+  | 'building'
   | 'working'
   | 'eating'
   | 'sleeping'
@@ -169,6 +170,25 @@ export interface Family {
   members: Set<number>
 }
 
+// A construction site: enqueued by the community but not yet a building.
+export interface PlannedBuilding {
+  id: number
+  type: BuildingType
+  // Rectangle in world (grid) coords.
+  x: number
+  y: number
+  w: number
+  h: number
+  cx: number
+  cy: number
+  // 0..1 completion. Reaches 1 → becomes a Building with a name.
+  progress: number
+  // How many labor-years the build costs. Rough scaling: temple > home > well.
+  effortNeeded: number
+  effortDone: number
+  reason: string
+}
+
 export interface Interaction {
   a: number
   b: number
@@ -200,6 +220,7 @@ export interface World {
   walls: Uint8Array
   // Content.
   buildings: Building[]
+  planned: PlannedBuilding[]
   people: Person[]
   families: Family[]
   interactions: Interaction[]
@@ -207,6 +228,14 @@ export interface World {
   // Autoincrement counters.
   nextPersonId: number
   nextFamilyId: number
+  nextBuildingId: number
+  nextPlannedId: number
+  // Thriving: current smoothed score in 0..100 and a short history buffer
+  // (sampled ~2x/second so we can draw a sparkline).
+  thrivingScore: number
+  thrivingHistory: number[]
+  // Optional per-building-type name pools consumed as new buildings open.
+  nameUsage: Set<string>
   // Aggregates for the UI (kept fresh so panel doesn't recompute each frame).
   stats: {
     population: number
@@ -217,6 +246,7 @@ export interface World {
     arrests: number
     executions: number
     saints: number
+    buildingsRaised: number
   }
 }
 

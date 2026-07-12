@@ -20,5 +20,13 @@ console.log('elapsed_ms:', dt.toFixed(0))
 console.log('simYear:', w.simYear.toFixed(2))
 console.log('stats:', w.stats)
 console.log('living:', w.people.filter((p) => p.alive).length)
+console.log('buildings:', w.buildings.length, 'planned:', w.planned.length)
+console.log('thriving:', w.thrivingScore.toFixed(1), 'history:', w.thrivingHistory.length)
+console.log(
+  'buildings by type:',
+  Object.entries(
+    w.buildings.reduce((m, b) => ((m[b.type] = (m[b.type] ?? 0) + 1), m), {}),
+  ),
+)
 console.log('sample events:')
-for (const e of w.events.slice(-10)) console.log(`  ${e.clock} [${e.kind}] ${e.text}`)
+for (const e of w.events.slice(-15)) console.log(`  ${e.clock} [${e.kind}] ${e.text}`)

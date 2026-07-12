@@ -33,13 +33,13 @@ function rectsOverlap(
   )
 }
 
-function placeBuilding(
+export function placeBuilding(
   rng: Rng,
   cols: number,
   rows: number,
   w: number,
   h: number,
-  existing: Building[],
+  existing: Array<{ x: number; y: number; w: number; h: number }>,
   region?: { x: number; y: number; w: number; h: number },
 ): { x: number; y: number } | null {
   const r = region ?? { x: 2, y: 2, w: cols - 4, h: rows - 4 }
@@ -59,7 +59,7 @@ function placeBuilding(
   return null
 }
 
-function makeBuilding(
+export function makeBuilding(
   id: number,
   type: BuildingType,
   name: string,
@@ -122,7 +122,7 @@ function paintHedges(walls: Uint8Array, cols: number, rows: number, rng: Rng): v
 }
 
 // Clear the interior of a building so pathing doesn't hit an accidental wall.
-function clearRect(
+export function clearRect(
   walls: Uint8Array,
   cols: number,
   x: number,
@@ -133,7 +133,7 @@ function clearRect(
   for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) walls[yy * cols + xx] = OPEN
 }
 
-function pickHomeName(rng: Rng, family: Family, used: Set<string>): string {
+export function pickHomeName(rng: Rng, family: Family, used: Set<string>): string {
   // "The Patels of Adarsh Niwas"-ish flavour.
   const base = pick(rng, BUILDING_NAME_POOLS.home)
   for (let i = 0; i < 6; i++) {
@@ -148,7 +148,7 @@ function pickHomeName(rng: Rng, family: Family, used: Set<string>): string {
   return unique
 }
 
-function pickUnique(rng: Rng, pool: readonly string[], used: Set<string>): string {
+export function pickUnique(rng: Rng, pool: readonly string[], used: Set<string>): string {
   for (let i = 0; i < 10; i++) {
     const s = pick(rng, pool)
     if (!used.has(s)) {
@@ -254,41 +254,26 @@ export function generateWorld(cfg: SimConfig): World {
   const usedNames = new Set<string>()
   let bid = 1
 
-  // Anchor civic buildings first, roughly in central & corner regions.
-  const civic: Array<{ type: BuildingType; w: number; h: number; pool: readonly string[]; region?: { x: number; y: number; w: number; h: number } }> = [
-    { type: 'temple', w: 6, h: 5, pool: BUILDING_NAME_POOLS.temple, region: { x: Math.floor(cols / 2) - 6, y: Math.floor(rows / 2) - 4, w: 12, h: 8 } },
-    { type: 'panchayat', w: 5, h: 4, pool: BUILDING_NAME_POOLS.panchayat },
-    { type: 'market', w: 6, h: 4, pool: BUILDING_NAME_POOLS.market },
-    { type: 'school', w: 5, h: 4, pool: BUILDING_NAME_POOLS.school },
-    { type: 'ashram', w: 4, h: 4, pool: BUILDING_NAME_POOLS.ashram },
-    { type: 'clinic', w: 4, h: 3, pool: BUILDING_NAME_POOLS.clinic },
-    { type: 'court', w: 5, h: 4, pool: BUILDING_NAME_POOLS.court, region: { x: 3, y: 3, w: 14, h: 12 } },
-    { type: 'jail', w: 5, h: 4, pool: BUILDING_NAME_POOLS.jail, region: { x: 3, y: 3, w: 14, h: 12 } },
-    { type: 'gallows', w: 3, h: 3, pool: BUILDING_NAME_POOLS.gallows, region: { x: 3, y: 3, w: 14, h: 12 } },
-    { type: 'well', w: 2, h: 2, pool: BUILDING_NAME_POOLS.well },
-    { type: 'chai_stall', w: 2, h: 2, pool: BUILDING_NAME_POOLS.chai_stall },
-    { type: 'farm', w: 6, h: 5, pool: BUILDING_NAME_POOLS.farm, region: { x: cols - 20, y: rows - 15, w: 15, h: 10 } },
-    { type: 'farm', w: 6, h: 5, pool: BUILDING_NAME_POOLS.farm, region: { x: 4, y: rows - 15, w: 15, h: 10 } },
-    { type: 'workshop', w: 4, h: 3, pool: BUILDING_NAME_POOLS.workshop },
-    { type: 'workshop', w: 4, h: 3, pool: BUILDING_NAME_POOLS.workshop },
-  ]
-
-  for (const spec of civic) {
-    const pos = placeBuilding(rng, cols, rows, spec.w, spec.h, buildings, spec.region)
-    if (!pos) continue
-    const name = pickUnique(rng, spec.pool, usedNames)
-    const b = makeBuilding(bid++, spec.type, name, pos.x, pos.y, spec.w, spec.h)
-    buildings.push(b)
-    clearRect(walls, cols, pos.x, pos.y, spec.w, spec.h)
+  // Minimal founding infrastructure: a single well at the heart of the
+  // compound and just enough shelter to house the founders. Every civic
+  // building — temple, market, school, court, jail — is unbuilt at
+  // sunrise; the settlers will decide what to raise, and only then does
+  // it earn a name.
+  const wellPos = placeBuilding(rng, cols, rows, 2, 2, buildings)
+  if (wellPos) {
+    const wellName = pickUnique(rng, BUILDING_NAME_POOLS.well, usedNames)
+    const w = makeBuilding(bid++, 'well', wellName, wellPos.x, wellPos.y, 2, 2)
+    buildings.push(w)
+    clearRect(walls, cols, wellPos.x, wellPos.y, 2, 2)
   }
 
-  // Families & homes. Aim for enough homes to comfortably hold the
-  // initial population (~3 people per home).
+  // Founding families & tents. One tent per ~4 founders, capped so the
+  // settlement starts sparse and the agents feel pressure to build more.
   const families: Family[] = []
   const people: Person[] = []
   let personId = 1
 
-  const homesTarget = Math.max(12, Math.ceil(cfg.initialPopulation / 3))
+  const homesTarget = Math.max(3, Math.ceil(cfg.initialPopulation / 4))
   for (let f = 0; f < homesTarget; f++) {
     const tribe = pick(rng, TRIBES)
     const surname = pickSurname(rng, tribe)
@@ -331,19 +316,25 @@ export function generateWorld(cfg: SimConfig): World {
     rows,
     walls,
     buildings,
+    planned: [],
     people,
     families,
     interactions: [],
     events: [
       {
         year: 0,
-        clock: '00:00:00',
-        text: `A new commune awakens with ${people.length} souls across ${families.length} households.`,
+        clock: '00d 00h 00m',
+        text: `${people.length} souls arrive at the wall — ${families.length} tents, one well, and open ground to build on.`,
         kind: 'note',
       },
     ],
     nextPersonId: personId,
     nextFamilyId: families.length + 1,
+    nextBuildingId: bid,
+    nextPlannedId: 1,
+    thrivingScore: 60,
+    thrivingHistory: [60],
+    nameUsage: usedNames,
     stats: {
       population: people.length,
       births: 0,
@@ -353,6 +344,7 @@ export function generateWorld(cfg: SimConfig): World {
       arrests: 0,
       executions: 0,
       saints: people.filter((p) => p.isSaint).length,
+      buildingsRaised: 0,
     },
   }
   return world
